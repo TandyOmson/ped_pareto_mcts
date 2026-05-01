@@ -47,20 +47,17 @@ class ParetoMCTSCycler:
 
     def step(self):
         leaf = self.selection.select(self.tree, self.archive)
-        child = self.expansion.expand(leaf)
-        rollouts = self.rollout.simulate(child)
+        self.expansion.expand(leaf)
+        sequence = self.rollout.simulate(leaf)
         
-        results = []
-        for node, sequence in rollouts:
-            objective_vector = {}
-            for obj in self.objective_functions:
-                objective_vector[obj.name] = obj.evaluate(sequence)
-            results.append(Molecule(sequence=sequence, reward=objective_vector))
+        objective_vector = {}
+        for obj in self.objective_functions:
+            objective_vector[obj.name] = obj.evaluate(sequence)
+        newmol = Molecule(sequence=sequence, reward=objective_vector)
         
-            backprop_payload = ParetoStats.get_reward(objective_vector, self.archive)
-            self.tree.backpropagate(node, backprop_payload)
+        backprop_payload = ParetoStats.get_reward(objective_vector, self.archive)
+        self.tree.backpropagate(leaf, backprop_payload)
 
-        for i in results:
-            self.archive.update(i)
+        self.archive.update(newmol)
 
         return # logging materials? leaf, child, results, archive size etc.

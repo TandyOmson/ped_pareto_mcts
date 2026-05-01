@@ -2,6 +2,9 @@ from typing import List, Dict
 from dataclasses import dataclass
 from base.reward import NodeStats, ObjectiveFunc
 
+# TO-DO: store a objective name mapping and change reward to just a vector of floats
+#        (the only places this logic is is here, and in puct.py)
+
 @dataclass(frozen=True)
 class Molecule:
     sequence: str

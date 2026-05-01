@@ -37,8 +37,5 @@ class Tree:
             # update node statistics
             if node.stats is not None:
                 node.stats.update(backprop_payload)
-            else:
-                NodeStats.init_stats(node)
-                node.stats.update(backprop_payload)
 
             node = node.parent
