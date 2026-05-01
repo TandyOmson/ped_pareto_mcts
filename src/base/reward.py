@@ -9,13 +9,11 @@ ObjecitiveVector = Dict[Objective, float]
 class ObjectiveFunc(ABC):
     """ Reward functions will always return floats
     """
+    def __init__(self, name):
+        self.name = name
+
     @abstractmethod
     def evaluate(self, sample) -> float:
-        raise NotImplementedError
-
-    @property
-    @abstractmethod
-    def name(self) -> str:
         raise NotImplementedError
 
     @property
