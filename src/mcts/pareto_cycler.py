@@ -1,8 +1,10 @@
 
 from base.tree import Tree, Node
-from base.reward import ObjectiveFunc, NodeStats
+from policies.puct import ParetoPUCT
+from policies.generative_expansion import GenerativeExpansion
+from policies.generative_rollout import GenerativeRollout
 from policies.global_pareto_archive import ParetoArchive, ParetoStats, Molecule
-from utils.utils import load_class, filter_class_config
+from utils.utils import load_class
 
 # idea for later (change updated in ParetoArchive to updated and feedback, generating this payload)
 # from dataclasses import dataclass
@@ -13,29 +15,20 @@ from utils.utils import load_class, filter_class_config
 #     hv_gain: float = 0.0    # hypervolume gain
 
 class ParetoMCTSCycler:
-    def __init__(self, config):
+    def __init__(self, gen_model, config):
         # Load policy classes and configs
-        selectionClass = load_class(config["selection_policy"]["class_path"])
-        selection_args = filter_class_config(selectionClass, **config["selection_policy"]["kwargs"])
-        
-        expansionClass = load_class(config["expansion_policy"]["class_path"])
-        expansion_args = filter_class_config(expansionClass, **config["expansion_policy"]["kwargs"])
-        
-        rolloutClass = load_class(config["rollout_policy"]["class_path"])
-        rollout_args = filter_class_config(rolloutClass, **config["rollout_policy"]["kwargs"])
-
-        self.selection = selectionClass(**selection_args)
-        self.expansion = expansionClass(**expansion_args)
-        self.rollout = rolloutClass(**rollout_args)
+        self.selection = ParetoPUCT(config["MCTS"]["exploration_const"], config["MCTS"]["maxlen"], gen_model)
+        self.expansion = GenerativeExpansion(self.tree, gen_model)
+        self.rollout = GenerativeRollout(self.tree, config["MCTS"]["maxlen"], gen_model)
         
         # Load reward function classes and config for evaluator
         objective_functions = []
         for objective in config["objective_functions"]:
-            objective_config = config["objective_functions"]["objective"]
+            objective_config = config["objective_functions"][objective]
             objectiveClass = load_class(objective_config["class_path"])
             objective_args = objective_config["kwargs"]
             
-            objective_functions.append(objectiveClass(objective_config["name"], **objective_args))
+            objective_functions.append(objectiveClass(objective, **objective_args))
 
         self.objective_functions = objective_functions
 
@@ -47,11 +40,13 @@ class ParetoMCTSCycler:
 
     def step(self):
         leaf = self.selection.select(self.tree, self.archive)
-        self.expansion.expand(leaf)
+        possible_child_nodes = self.expansion.expand(leaf)
         sequence = self.rollout.simulate(leaf)
         
         objective_vector = {}
         for obj in self.objective_functions:
+            if hasattr(obj, "extra_reward_info"):
+                extra_reward_info = obj.extra_reward_info()
             objective_vector[obj.name] = obj.evaluate(sequence)
         newmol = Molecule(sequence=sequence, reward=objective_vector)
         
@@ -60,4 +55,12 @@ class ParetoMCTSCycler:
 
         self.archive.update(newmol)
 
-        return # logging materials? leaf, child, results, archive size etc.
+        # return logging info
+        step_info = {}
+        step_info["leaf"] = leaf
+        step_info["possible_child_nodes"] = possible_child_nodes
+        step_info["path"] = sequence
+        step_info["pareto_front"] = self.archive.front  
+        step_info["reward_info"] = extra_reward_info
+        
+        return step_info

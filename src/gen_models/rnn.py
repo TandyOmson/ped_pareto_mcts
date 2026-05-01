@@ -24,11 +24,11 @@ class GRUNextTokenLM(nn.Module):
     def __init__(self, vocab: list, embed_dim=128, hidden_dim=256, num_layers=1):
         super().__init__()
         self.vocab = Vocab(vocab)
-        self.pad_idx = vocab.stoi[vocab.pad]
+        self.pad_idx = self.vocab.stoi[self.vocab.pad]
 
-        self.emb = nn.Embedding(vocab.size, embed_dim, padding_idx=self.pad_idx)
+        self.emb = nn.Embedding(self.vocab.size, embed_dim, padding_idx=self.pad_idx)
         self.gru = nn.GRU(embed_dim, hidden_dim, num_layers=num_layers, batch_first=True)
-        self.proj = nn.Linear(hidden_dim, vocab.size)
+        self.proj = nn.Linear(hidden_dim, self.vocab.size)
 
     def forward_logits(self, x):
         # x: [B, T] token IDs
@@ -99,7 +99,7 @@ def fit(
 
 if __name__ == "__main__":
     import argparse
-    from model_utils import tokenize_smiles, save_model, save_tokens
+    from gen_models.model_utils import tokenize_smiles, save_model, save_tokens
     from pathlib import Path
 
     parser = argparse.ArgumentParser()
@@ -119,4 +119,4 @@ if __name__ == "__main__":
     # print(probs)
 
     save_model(model, Path(args.model_out))
-    save_tokens(all_tokens + "<unk>" + '$')
+    save_tokens(all_tokens + "<unk>" + '$', Path(args.vocab_out))

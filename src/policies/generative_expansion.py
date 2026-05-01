@@ -19,7 +19,10 @@ class GenerativeExpansion(ExpansionPolicy):
         prob_dict = self.model.get_all_prob_next_symbol(path)
 
         # filter out impossible or really unlikely nodes
+        prob_dict_filtered = prob_dict
 
         # initialize child nodes
-        for token in prob_dict.keys():
+        for token in prob_dict_filtered.keys():
             self.tree.get_or_create_child(parent=node, token=token)
+        
+        return prob_dict_filtered
