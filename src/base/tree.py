@@ -1,7 +1,7 @@
 from typing import Hashable
 
 Token = Hashable
-from base.policies import NodeStats
+from base.reward import NodeStats
 
 class Node:
     """ Node containing a sequence token

@@ -7,7 +7,7 @@
 from abc import ABC, abstractmethod
 
 from base.tree import Tree, Node
-from base.reward_func import RewardVector
+from base.reward import ObjecitiveVector
 
 class SelectionPolicy(ABC):
     """ Read-only, looks at tree linkage and node stats
@@ -38,8 +38,8 @@ class RolloutPolicy(ABC):
     """ Executes a rollout from a given node
     """
     @abstractmethod
-    def rollout(self, node: Node) -> RewardVector:
-        """ Perform a rollout starting from node, return a RewardVector
-            (this vector will be pareto-processed later)
+    def rollout(self, node: Node) -> ObjecitiveVector:
+        """ Perform a rollout starting from node, return a sequence objective vector
+            (this vector will be processed later for backprop, as defined in NodeStas)
         """
         raise NotImplementedError
