@@ -13,7 +13,7 @@ class Node:
         self.parent = parent
         self.children = {}
         self.visit_count = 0
-        self.archive_stats = None
+        self.stats = None
 
 class Tree:
     """ Owns the MCTS node linkage and updates node statistics
@@ -35,7 +35,10 @@ class Tree:
         while node is not None:
             node.visit_count += 1            
             # update node statistics
-            if node.archive_stats is not None:
-                node.archive_stats.update(backprop_payload)
+            if node.stats is not None:
+                node.stats.update(backprop_payload)
+            else:
+                NodeStats.init_stats(node)
+                node.stats.update(backprop_payload)
 
             node = node.parent

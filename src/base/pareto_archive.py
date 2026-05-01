@@ -1,10 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import Dict, Hashable
 
-from  base.policies import NodeStats
-
-Objective = Hashable
-RewardVector = Dict[Objective, float]
+from base.reward_func import RewardVector, NodeStats
 
 class ParetoArchive(ABC):
     """ Maintains a set of non-dominated reward vectors

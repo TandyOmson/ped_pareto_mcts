@@ -7,7 +7,7 @@
 from abc import ABC, abstractmethod
 
 from base.tree import Tree, Node
-from base.pareto_archive import RewardVector
+from base.reward_func import RewardVector
 
 class SelectionPolicy(ABC):
     """ Read-only, looks at tree linkage and node stats
@@ -40,21 +40,6 @@ class RolloutPolicy(ABC):
     @abstractmethod
     def rollout(self, node: Node) -> RewardVector:
         """ Perform a rollout starting from node, return a RewardVector
-            (this vecctor will be pareto-processed later)
+            (this vector will be pareto-processed later)
         """
         raise NotImplementedError
-
-class NodeStats(ABC):
-    """ Determines how rewards are transformed into node statistics and what they look like
-    """
-    @abstractmethod
-    def update(self, update_stats):
-        """ Combines old update stats with update stats, returns new ones
-        """
-        raise NotImplementedError
-    
-    @staticmethod
-    @abstractmethod
-    def init_archive_stats(node):
-        """ Initialises archive stats 
-        """

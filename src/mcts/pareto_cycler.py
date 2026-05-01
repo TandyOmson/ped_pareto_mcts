@@ -1,7 +1,7 @@
 
 from utils.utils import load_class, filter_class_config
 
-class MCTSCycler:
+class ParetoMCTSCycler:
     def __init__(self, config):
         # Initialise tree object and pareto archive
 
