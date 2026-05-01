@@ -1,17 +1,10 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Hashable
 
+from  base.policies import NodeStats
+
 Objective = Hashable
 RewardVector = Dict[Objective, float]
-
-class NodeArchiveStats(ABC):
-    """ Determines how rewards are transformed into node statistics and what they look like
-    """
-    @abstractmethod
-    def update(self, update_stats):
-        """ Combines old update stats with update stats, returns new ones
-        """
-        raise NotImplementedError
 
 class ParetoArchive(ABC):
     """ Maintains a set of non-dominated reward vectors
@@ -31,7 +24,7 @@ class ParetoArchive(ABC):
         raise NotImplementedError
     
     @abstractmethod
-    def get_backprop_payload(self, rewards: RewardVector) -> NodeArchiveStats:
+    def get_backprop_payload(self, rewards: RewardVector) -> NodeStats:
         """ Produce a backprop-ready payload of pareto derived metrics using 
             a reward vector and current archive state
         """

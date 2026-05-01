@@ -3,6 +3,9 @@ from utils.utils import load_class, filter_class_config
 
 class MCTSCycler:
     def __init__(self, config):
+        # Initialise tree object and pareto archive
+
+        # Load policy classes and configs
         selectionClass = load_class(config["selection_policy"]["class_path"])
         selection_args = filter_class_config(selectionClass, **config["selection_policy"]["kwargs"])
         
@@ -15,6 +18,8 @@ class MCTSCycler:
         self.selection = selectionClass(**selection_args)
         self.expansion = expansionClass(**expansion_args)
         self.rollout = rolloutClass(**rollout_args)
+        
+        # Load reward function classes and config for evaluator  
 
     def step(self):
         leaf = self.selection.select(self.tree, self.archive)

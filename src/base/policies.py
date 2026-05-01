@@ -43,3 +43,18 @@ class RolloutPolicy(ABC):
             (this vecctor will be pareto-processed later)
         """
         raise NotImplementedError
+
+class NodeStats(ABC):
+    """ Determines how rewards are transformed into node statistics and what they look like
+    """
+    @abstractmethod
+    def update(self, update_stats):
+        """ Combines old update stats with update stats, returns new ones
+        """
+        raise NotImplementedError
+    
+    @staticmethod
+    @abstractmethod
+    def init_archive_stats(node):
+        """ Initialises archive stats 
+        """
