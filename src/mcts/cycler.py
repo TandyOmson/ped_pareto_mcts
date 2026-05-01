@@ -1,6 +1,20 @@
+
+from utils.utils import load_class, filter_class_config
+
 class MCTSCycler:
-    def __init__(self):
-        pass
+    def __init__(self, config):
+        selectionClass = load_class(config["selection_policy"]["class_path"])
+        selection_args = filter_class_config(selectionClass, **config["selection_policy"]["kwargs"])
+        
+        expansionClass = load_class(config["expansion_policy"]["class_path"])
+        expansion_args = filter_class_config(expansionClass, **config["expansion_policy"]["kwargs"])
+        
+        rolloutClass = load_class(config["rollout_policy"]["class_path"])
+        rollout_args = filter_class_config(rolloutClass, **config["rollout_policy"]["kwargs"])
+
+        self.selection = selectionClass(**selection_args)
+        self.expansion = expansionClass(**expansion_args)
+        self.rollout = rolloutClass(**rollout_args)
 
     def step(self):
         leaf = self.selection.select(self.tree, self.archive)
