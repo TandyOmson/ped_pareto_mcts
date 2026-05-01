@@ -45,7 +45,7 @@ class ParetoPUCT(SelectionPolicy):
             path.insert(0, current_node.token)
             current_node = current_node.parent
         
-        prob = self.model.get_prob_next_symbol(path, node.token)
+        prob = self.model.get_all_prob_next_symbol(path)[node.token]
 
         # This is an array
         return node_stats + (self.c_val * prob * visit_const)
