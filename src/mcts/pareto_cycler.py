@@ -1,9 +1,29 @@
 
+from base.tree import Tree, Node
 from utils.utils import load_class, filter_class_config
+
+class ParetoArchive:
+    """ Maintains a set of non-dominated reward vectors
+        Produces pareto-derived metrics for MCTS functions
+    """
+
+    @abstractmethod
+    def update_archive(self, rewards: RewardVector) -> None:
+        """ Try to insert a reward vector into the archive
+        """
+        raise NotImplementedError
+    
+    @abstractmethod
+    def is_non_dominated(self, rewards: RewardVector) -> bool:
+        """ Test wheter a reward vector is non-dominated w.r.t. the current archive
+        """
+        raise NotImplementedError
 
 class ParetoMCTSCycler:
     def __init__(self, config):
         # Initialise tree object and pareto archive
+        root_node = Node(token='&', parent=None)
+        tree = Tree(root_node)
 
         # Load policy classes and configs
         selectionClass = load_class(config["selection_policy"]["class_path"])

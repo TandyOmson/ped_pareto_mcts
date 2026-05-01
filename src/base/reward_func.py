@@ -26,6 +26,13 @@ class NodeStats(ABC):
     """ Determines how rewards are transformed into node statistics
     """
     @abstractmethod
+    def get_backprop_payload(self, rewards: RewardVector):
+        """ Produce a backprop-ready payload from reward vector
+            (subclasses may involve other arguments like pareto archive)
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def update(self, update_stats):
         """ Combines old update stats with update stats, returns new ones
         """
