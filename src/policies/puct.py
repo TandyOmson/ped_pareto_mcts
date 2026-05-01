@@ -21,7 +21,7 @@ class ParetoPUCT(SelectionPolicy):
     def select(self, node):
         puct = []
         for childnode in node.children.values():
-            puct.append(self.calc_puct(childnode, self.model))
+            puct.append(self.calc_puct(childnode))
         
         puct_idxs = self.get_pareto_front_idxs(puct)
         idx = random.choice(puct_idxs)
@@ -34,16 +34,16 @@ class ParetoPUCT(SelectionPolicy):
 
         # first term stats/visits ensures the MCTS exploits the nodes with mulltiple high stat metrics
         node_stats = np.array([i for i in node.stats.values()])/node.visit_count
-        
-        # second term constant guides MCTS to initially prefer nodes with low vist count
-        visit_const = np.sqrt(node.parent.visit_count) / (1 + node.visit_count) 
-        
-        # multiplied by model probability (that this is the next token in sequence)
+         
+        # model probability (that this is the next token in sequence)
         path = []
         current_node = node
         while current_node.parent is not None:
             path.insert(0, current_node.token)
             current_node = current_node.parent
+
+        # model probability multiplied by second term constant guides MCTS to initially prefer nodes with low vist count
+        visit_const = np.sqrt(current_node.visit_count) / (1 + node.visit_count) 
         
         prob = self.model.get_all_prob_next_symbol(path)[node.token]
 

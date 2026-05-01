@@ -2,8 +2,8 @@ outdir: logs/test
 
 gen_model:
   class_path: gen_models.rnn.GRUNextTokenLM
-  model_file:
-  vocab_file:
+  model_file: data/gen_models/rnn_test.pt
+  vocab_file: data/gen_models/rnn_test_vocab.json
 
 MCTS:
   class_path: mcts.pareto_cycler.ParetoMCTSCycler
@@ -25,7 +25,7 @@ objective_functions:
     class_path: objectives.rdkit.molwtObjective
     kwargs: {}
   VinaScore:
-    class_path: objective.smina_score.VinaScore
+    class_path: objectives.smina_score.VinaScore
     kwargs:
       receptor_file: data/receptors/cb7.sdf
 

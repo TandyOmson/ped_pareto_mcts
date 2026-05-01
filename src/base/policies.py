@@ -29,12 +29,6 @@ class ExpansionPolicy(ABC):
         Controls when and how nodes are expanded
     """
     @abstractmethod
-    def can_expand(self, tree: Tree, node: Node) -> bool:
-        """ Check elegibility of a node of expansion
-        """
-        raise NotImplementedError
-    
-    @abstractmethod
     def expand(self, tree: Tree, node: Node) -> Node:
         """ Attach one new child to node and return the new node
             Initialises stats for the new node
@@ -45,7 +39,7 @@ class RolloutPolicy(ABC):
     """ Executes a rollout from a given node
     """
     @abstractmethod
-    def rollout(self, node: Node) -> List:
+    def simulate(self, node: Node) -> List:
         """ Perform a rollout starting from node, return a sequence objective vector
             (this vector will be processed later for backprop, as defined in NodeStas)
         """

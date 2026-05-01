@@ -1,9 +1,10 @@
 import importlib
 import inspect
+import json
 import torch
 
 def load_class(class_path):
-    module_name, class_name = class_path.rsplit(".", 1)
+    module_name, class_name = str(class_path).rsplit(".", 1)
     module = importlib.import_module(module_name)
     return getattr(module, class_name)
 
@@ -50,7 +51,7 @@ def filter_class_config(cls, **config):
 
 def load_model(modelClass, modelpath, vocab, device="cpu"):
     checkpoint = torch.load(modelpath, map_location=device)
-
+    
     model = modelClass(
         vocab=vocab,
         **checkpoint["config"],
@@ -63,5 +64,6 @@ def load_model(modelClass, modelpath, vocab, device="cpu"):
     return model
 
 def load_tokens(tokenpath):
-    with open(tokenpath, "r", encoding="utf-8") as f:
-        return [line.rstrip("\n") for line in f]
+    with open(tokenpath, "r") as f:
+        tokens = json.load(f)
+    return tokens

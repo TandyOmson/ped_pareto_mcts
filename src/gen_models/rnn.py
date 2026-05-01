@@ -4,10 +4,12 @@ import torch.nn.functional as F
 
 class Vocab:
     def __init__(self, tokens, pad="<pad>", unk="<unk>"):
-        uniq = list(dict.fromkeys(tokens))
         self.pad = pad
         self.unk = unk
-        self.itos = [pad, unk] + uniq
+        if pad not in tokens and unk not in tokens:
+            self.itos = [pad, unk] + tokens
+        else:
+            self.itos = tokens
         self.stoi = {t: i for i, t in enumerate(self.itos)}
 
     @property
@@ -118,5 +120,6 @@ if __name__ == "__main__":
     # probs = model.get_all_prob_next_symbol(["C", "C"])
     # print(probs)
 
+    print("vocab_size:", len(model.vocab.itos))
     save_model(model, Path(args.model_out))
-    save_tokens(all_tokens + "<unk>" + '$', Path(args.vocab_out))
+    save_tokens(model.vocab.itos, Path(args.vocab_out))

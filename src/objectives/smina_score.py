@@ -7,20 +7,20 @@ from base.reward import ObjectiveFunc
 from objectives.objecitve_utils import embed_mol
 
 class VinaScore(ObjectiveFunc):
-    def __init__(self, receptor_file):
-        super().__init__("vina_score")
+    def __init__(self, name, receptor_file):
+        super().__init__(name)
         
         self.receptor_file = Path(receptor_file)
 
     def evaluate(self, smi):
         with tempfile.TemporaryDirectory() as rundir:
             mol = embed_mol(smi)
-            Chem.MolToMolFile(rundir / "ligand.sdf")
+            Chem.MolToMolFile(mol, rundir + "ligand.sdf")
 
-            smina_cmd_output = rundir / "vina.log"
+            smina_cmd_output = rundir + "vina.log"
             launch_args = ["smina", 
-                           "-r", self.receptor_file, 
-                           "-l", rundir / "ligand.sdf", 
+                           "-r", str(self.receptor_file), 
+                           "-l", rundir + "ligand.sdf", 
                            "--center_x", "0.0",
                            "--center_y", "0.0",
                            "--center_z", "0.0",
@@ -45,7 +45,7 @@ class VinaScore(ObjectiveFunc):
                         affinity = float(lines[1])
             p = sp.Popen('rm -rf ' + smina_cmd_output, shell=True, stdout=sp.PIPE)
             p.communicate()
-            p = sp.Popen('rm -rf ' + rundir / "ligand.sdf", shell=True, stdout=sp.PIPE)
+            p = sp.Popen('rm -rf ' + rundir + "ligand.sdf", shell=True, stdout=sp.PIPE)
             p.communicate()
 
         return affinity

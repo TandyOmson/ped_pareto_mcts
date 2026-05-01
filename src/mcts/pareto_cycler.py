@@ -1,4 +1,6 @@
 
+import logging
+
 from base.tree import Tree, Node
 from policies.puct import ParetoPUCT
 from policies.generative_expansion import GenerativeExpansion
@@ -14,16 +16,25 @@ from utils.utils import load_class
 #     dominance_gain: int     # 0 or 1
 #     hv_gain: float = 0.0    # hypervolume gain
 
+log = logging.getLogger()
+
 class ParetoMCTSCycler:
     def __init__(self, gen_model, config):
+        # Initialise tree object and pareto archive
+        # Node stats are defined in ParetoStats above
+        root_node = Node(token='&', parent=None)
+        self.tree = Tree(root_node)
+        self.archive = ParetoArchive()
+
         # Load policy classes and configs
         self.selection = ParetoPUCT(config["MCTS"]["exploration_const"], config["MCTS"]["maxlen"], gen_model)
         self.expansion = GenerativeExpansion(self.tree, gen_model)
-        self.rollout = GenerativeRollout(self.tree, config["MCTS"]["maxlen"], gen_model)
+        self.rollout = GenerativeRollout(config["MCTS"]["maxlen"], gen_model)
         
         # Load reward function classes and config for evaluator
         objective_functions = []
         for objective in config["objective_functions"]:
+            log.info(f"Loading objective: {objective}")
             objective_config = config["objective_functions"][objective]
             objectiveClass = load_class(objective_config["class_path"])
             objective_args = objective_config["kwargs"]
@@ -32,22 +43,21 @@ class ParetoMCTSCycler:
 
         self.objective_functions = objective_functions
 
-        # Initialise tree object and pareto archive
-        # Node stats are defined in ParetoStats above
-        root_node = Node(token='&', parent=None)
-        self.tree = Tree(root_node)
-        self.archive = ParetoArchive()
-
     def step(self):
-        leaf = self.selection.select(self.tree, self.archive)
+        if self.tree.root.children:
+            leaf = self.selection.select(self.tree.root)
+        else:
+            # case of start of tree
+            leaf = self.tree.root
         possible_child_nodes = self.expansion.expand(leaf)
         sequence = self.rollout.simulate(leaf)
         
         objective_vector = {}
+        extra_reward_info = {}
         for obj in self.objective_functions:
             if hasattr(obj, "extra_reward_info"):
-                extra_reward_info = obj.extra_reward_info()
-            objective_vector[obj.name] = obj.evaluate(sequence)
+                extra_reward_info[obj.name] = obj.extra_reward_info()
+            objective_vector[obj.name] = obj.evaluate("".join(sequence[1:]))
         newmol = Molecule(sequence=sequence, reward=objective_vector)
         
         backprop_payload = ParetoStats.get_reward(objective_vector, self.archive)

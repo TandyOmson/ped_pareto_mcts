@@ -4,8 +4,8 @@ import argparse
 import yaml
 import logging
 import sys
+import pprint
 from pathlib import Path
-from pprint import pprint
 
 from utils.utils import load_model, load_tokens, load_class
 
@@ -18,11 +18,12 @@ class MCTS:
         # Stopping criteria
         self.total_gen_mols = 0
 
-    def __call__(self):
-        cyclerClass = load_class(Path(self.config["MCTS"]["class_path"]))
+    def __call__(self):        
         modelClass = load_class(Path(self.config["gen_model"]["class_path"]))
         vocab = load_tokens(Path(self.config["gen_model"]["vocab_file"]))
         model = load_model(modelClass, Path(self.config["gen_model"]["model_file"]), vocab)
+        
+        cyclerClass = load_class(Path(self.config["MCTS"]["class_path"]))
         cycler = cyclerClass(model, self.config)
 
         while self.total_gen_mols < self.config["MCTS"]["max_gen_mols"]:
@@ -39,10 +40,10 @@ def setup_logging(log_dir):
     log = logging.getLogger()
     log.setLevel(logging.DEBUG)
 
-    try:
-        log_dir.mkdir(parents=False, exist_ok=False)
-    except:
-        raise Exception(f"Log directory {log_dir} already exists. Exiting...")
+    # try:
+    #     log_dir.mkdir(parents=False, exist_ok=False)
+    # except:
+    #     raise Exception(f"Log directory {log_dir} already exists. Exiting...")
     
     formatter = logging.Formatter(
         fmt="%(asctime)s | %(name)s | %(levelname)s | %(message)s",
@@ -80,7 +81,7 @@ if __name__ == "__main__":
         config = yaml.safe_load(fr)
 
     setup_logging(Path(config["outdir"]))
-
+    
     log.info("STARTING MCTS:")
     final_pareto_front = MCTS(config)()
 

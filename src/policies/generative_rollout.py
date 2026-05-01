@@ -7,7 +7,7 @@ class GenerativeRollout(RolloutPolicy):
         self.maxlen = maxlen
         self.model = model
 
-    def rollout(self, node):
+    def simulate(self, node):
         """ Get completed sequence
         """
         path = [node.token]
