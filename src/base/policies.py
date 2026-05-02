@@ -13,8 +13,7 @@ class SelectionPolicy(ABC):
     """
     @abstractmethod
     def traverse(self, root_node: Node) -> tuple[List, Node]:
-        """ Calls select from current root node until a Node is selected
-            Returns the sequence up to that point and the node
+        """ Calls select root node until a Node is selected
         """
         raise NotImplementedError
 

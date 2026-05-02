@@ -1,7 +1,7 @@
 from typing import Hashable
+from base.reward import BackpropPayload
 
 Token = Hashable
-from base.reward import NodeStats
 
 class Node:
     """ Node containing a sequence token
@@ -28,14 +28,14 @@ class Tree:
             parent.children[token] = Node(token=token, parent=parent)
         return parent.children[token]
     
-    def backpropagate(self, node: Node, backprop_payload: NodeStats) -> None:
+    def backpropagate(self, node: Node, backprop_payload: BackpropPayload) -> None:
         """ Update the node and its ancestors visit count and archive stats (pareto dervied metrics)
             ArchiveStats is defined in policies 
         """
         while node is not None:
             node.visit_count += 1            
             # update node statistics
-            if node.stats is not None:
-                node.stats.update(backprop_payload)
+            if backprop_payload is not None:
+                backprop_payload.update(node)
 
             node = node.parent

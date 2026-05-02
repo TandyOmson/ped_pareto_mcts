@@ -13,10 +13,10 @@ class GenerativeRollout(RolloutPolicy):
         path = [node.token]
         current_node = node
         while current_node.parent is not None:
-            path.insert(0, current_node.token)
             current_node = current_node.parent
+            path.insert(0, current_node.token)
         
-        while len(path) <= self.maxlen and path[-1] != '$':
+        while len(path) < self.maxlen and path[-1] != '$':
             next_symbol_probs = self.model.get_all_prob_next_symbol(path)
             next_symbol = max(next_symbol_probs, key=next_symbol_probs.get)
             path.append(next_symbol)

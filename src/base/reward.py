@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from typing import Dict, Hashable
 
 Objective = Hashable
-ObjecitiveVector = Dict[Objective, float]
+ObjectiveVector = Dict[Objective, float]
 
 class ObjectiveFunc(ABC):
     """ Reward functions will always return floats
@@ -22,19 +22,18 @@ class ObjectiveFunc(ABC):
         """
         return "max"
     
-class NodeStats(ABC):
+class BackpropPayload(ABC):
     """ Determines how objective function results are converted into rewards
         and how rewards update node stats
     """
     @abstractmethod
-    def update(self, reward):
+    def update(self):
         """ Combines old stats with new reward
         """
         raise NotImplementedError
     
-    @staticmethod
     @abstractmethod
-    def get_reward(objective_vector: ObjecitiveVector):
+    def get_reward(objective_vector: ObjectiveVector):
         """ Produces a sequence reward from objective vector
             (reward has no fixed type, could be vector or float)
         """

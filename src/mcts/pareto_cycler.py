@@ -5,7 +5,7 @@ from base.tree import Tree, Node
 from policies.puct import ParetoPUCT
 from policies.generative_expansion import GenerativeExpansion
 from policies.generative_rollout import GenerativeRollout
-from policies.global_pareto_archive import ParetoArchive, ParetoStats, Molecule
+from policies.global_pareto_archive import ParetoArchive, ParetoBackprop, Molecule
 from utils.utils import load_class
 
 # idea for later (change updated in ParetoArchive to updated and feedback, generating this payload)
@@ -27,7 +27,7 @@ class ParetoMCTSCycler:
         self.archive = ParetoArchive()
 
         # Load policy classes and configs
-        self.selection = ParetoPUCT(config["MCTS"]["exploration_const"], config["MCTS"]["maxlen"], gen_model)
+        self.selection = ParetoPUCT(config["MCTS"]["exploration_const"], len(config["objective_functions"]), config["MCTS"]["maxlen"], gen_model)
         self.expansion = GenerativeExpansion(self.tree, gen_model)
         self.rollout = GenerativeRollout(config["MCTS"]["maxlen"], gen_model)
         
@@ -44,11 +44,7 @@ class ParetoMCTSCycler:
         self.objective_functions = objective_functions
 
     def step(self):
-        if self.tree.root.children:
-            leaf = self.selection.select(self.tree.root)
-        else:
-            # case of start of tree
-            leaf = self.tree.root
+        leaf, root_to_leaf = self.selection.traverse(self.tree.root)        
         possible_child_nodes = self.expansion.expand(leaf)
         sequence = self.rollout.simulate(leaf)
         
@@ -60,7 +56,7 @@ class ParetoMCTSCycler:
             objective_vector[obj.name] = obj.evaluate("".join(sequence[1:]))
         newmol = Molecule(sequence=sequence, reward=objective_vector)
         
-        backprop_payload = ParetoStats.get_reward(objective_vector, self.archive)
+        backprop_payload = ParetoBackprop(objective_vector, self.archive)
         self.tree.backpropagate(leaf, backprop_payload)
 
         self.archive.update(newmol)
@@ -69,7 +65,8 @@ class ParetoMCTSCycler:
         step_info = {}
         step_info["leaf"] = leaf
         step_info["possible_child_nodes"] = possible_child_nodes
-        step_info["path"] = sequence
+        step_info["root_to_leaf"] = root_to_leaf
+        step_info["molecule"] = sequence
         step_info["pareto_front"] = self.archive.front  
         step_info["reward_info"] = extra_reward_info
         

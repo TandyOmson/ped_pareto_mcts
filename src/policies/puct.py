@@ -5,18 +5,21 @@ import numpy as np
 from base.policies import SelectionPolicy
 
 class ParetoPUCT(SelectionPolicy):
-    def __init__(self, exploration_const, maxlen, model):
+    def __init__(self, exploration_const, num_objectives, maxlen, model):
         self.c_val = exploration_const
+        self.num_objectives = num_objectives
         self.maxlen = maxlen
         self.model = model
 
     def traverse(self, root_node):
         node = root_node
+        root_to_leaf = [node.token]
         # while non-terminal valid leaf node
-        while len(node.children.values()) != 0 and node.token != '$':
+        while len(node.children) != 0 and node.token != '$':
             node = self.select(node)
+            root_to_leaf.append(node.token)
 
-        return node
+        return node, root_to_leaf
 
     def select(self, node):
         puct = []
@@ -29,11 +32,11 @@ class ParetoPUCT(SelectionPolicy):
         return list(node.children.values())[idx]
 
     def calc_puct(self, node):
-        if node.visit_count == 0:
-            return np.full(len(node.stats), np.inf)
-
         # first term stats/visits ensures the MCTS exploits the nodes with mulltiple high stat metrics
-        node_stats = np.array([i for i in node.stats.values()])/node.visit_count
+        if node.visit_count == 0:
+            exploitation = np.zeros(self.num_objectives)
+        else:
+            exploitation = np.array([i for i in node.stats.values()])/node.visit_count
          
         # model probability (that this is the next token in sequence)
         path = []
@@ -43,12 +46,12 @@ class ParetoPUCT(SelectionPolicy):
             current_node = current_node.parent
 
         # model probability multiplied by second term constant guides MCTS to initially prefer nodes with low vist count
-        visit_const = np.sqrt(current_node.visit_count) / (1 + node.visit_count) 
+        not_visited_const = np.sqrt(current_node.visit_count) / (1 + node.visit_count) 
         
         prob = self.model.get_all_prob_next_symbol(path)[node.token]
 
         # This is an array
-        return node_stats + (self.c_val * prob * visit_const)
+        return exploitation + (self.c_val * prob * not_visited_const)
 
     @staticmethod
     def get_pareto_front_idxs(puct_vectors):

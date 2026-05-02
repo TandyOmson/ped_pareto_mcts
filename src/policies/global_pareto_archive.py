@@ -1,6 +1,6 @@
 from typing import List, Dict
 from dataclasses import dataclass
-from base.reward import NodeStats, ObjectiveFunc
+from base.reward import BackpropPayload, ObjectiveFunc
 
 # TO-DO: store a objective name mapping and change reward to just a vector of floats
 #        (the only places this logic is is here, and in puct.py)
@@ -44,22 +44,24 @@ class ParetoArchive:
 
         return dominated_seqs
     
-class ParetoStats(NodeStats):
+class ParetoBackprop(BackpropPayload):
     """ Pareto statistics for nodes
         Objective functions are converted to a reward vector using input from archive
         Node stats are updated by adding reward vector to node stats
     """
-    def __init__(self, obj_funcs: List[ObjectiveFunc]):
+    def __init__(self, objective_vector, pareto_archive):
         """ Node stats are a vector (dict) of pareto-aggregated objectives
         """
-        self.stats = {obj.name: 0.0 for obj in obj_funcs}
+        self.stat_names = list(objective_vector.keys())
+        self.reward = self.get_reward(objective_vector, pareto_archive)
     
-    def update(self, reward):
-        for key, val in reward.items():
-            self.stats[key] += val
+    def update(self, node):
+        if node.stats is None:
+            node.stats = {name: 0.0 for name in self.stat_names}
+        for key, val in self.reward.items():
+            node.stats[key] += val
 
-    @staticmethod
-    def get_reward(objective_vector, pareto_archive):
+    def get_reward(self, objective_vector, pareto_archive):
         reward = {}
 
         if not pareto_archive.front:
