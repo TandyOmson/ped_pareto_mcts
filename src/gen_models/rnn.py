@@ -103,4 +103,4 @@ class rnnTrainer():
                 opt.zero_grad()
                 loss.backward()
                 opt.step()
-                t.set_postfix(f"epoch {ep:03d} | loss = {loss.item():.4f}")
+                t.set_postfix(epoch=f"{ep:03d}", loss=f"{loss.item():.4f}")
