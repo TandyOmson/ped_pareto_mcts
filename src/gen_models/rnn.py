@@ -3,7 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from tqdm import trange 
-import copy
 
 class Vocab:
     def __init__(self, tokens, pad="<pad>", unk="<unk>"):
@@ -39,7 +38,6 @@ class GRUNextTokenLM(nn.Module):
         # x: [B, T] token IDs
         emb = self.emb(x)
         h, _ = self.gru(emb)
-        h, _ = copy(self.gru(emb))
         return self.proj(h)          # [B, T, V]
 
     def forward(self, seqs):
