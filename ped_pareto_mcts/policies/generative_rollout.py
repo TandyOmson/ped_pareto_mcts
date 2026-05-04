@@ -1,4 +1,4 @@
-from base.policies import RolloutPolicy
+from ped_pareto_mcts.base.policies import RolloutPolicy
 
 class GenerativeRollout(RolloutPolicy):
     """ Rollout conisists of selecting each symbol greedily (according to max probability from model)

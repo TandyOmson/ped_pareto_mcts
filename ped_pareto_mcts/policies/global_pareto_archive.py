@@ -1,6 +1,6 @@
 from typing import List, Dict
 from dataclasses import dataclass
-from base.reward import BackpropPayload, ObjectiveFunc
+from ped_pareto_mcts.base.reward import BackpropPayload, ObjectiveFunc
 
 # TO-DO: store a objective name mapping and change reward to just a vector of floats
 #        (the only places this logic is is here, and in puct.py)

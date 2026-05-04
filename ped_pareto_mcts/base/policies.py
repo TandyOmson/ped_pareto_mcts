@@ -6,7 +6,7 @@
 
 from abc import ABC, abstractmethod
 from typing import List
-from base.tree import Tree, Node
+from ped_pareto_mcts.base.tree import Tree, Node
 
 class SelectionPolicy(ABC):
     """ Read-only 

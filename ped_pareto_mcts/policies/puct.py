@@ -2,7 +2,7 @@
 """
 import random
 import numpy as np
-from base.policies import SelectionPolicy
+from ped_pareto_mcts.base.policies import SelectionPolicy
 
 class ParetoPUCT(SelectionPolicy):
     def __init__(self, exploration_const, num_objectives, maxlen, model):

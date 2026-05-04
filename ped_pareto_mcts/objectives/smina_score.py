@@ -3,8 +3,8 @@ import tempfile
 from pathlib import Path
 from rdkit import Chem
 
-from base.reward import ObjectiveFunc
-from objectives.objecitve_utils import embed_mol
+from ped_pareto_mcts.base.reward import ObjectiveFunc
+from ped_pareto_mcts.objectives.objecitve_utils import embed_mol
 
 class VinaScore(ObjectiveFunc):
     def __init__(self, name, receptor_file):

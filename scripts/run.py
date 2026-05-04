@@ -7,7 +7,7 @@ import sys
 import pprint
 from pathlib import Path
 
-from utils.utils import load_model, load_tokens, load_class
+from ped_pareto_mcts.utils.utils import load_model, load_tokens, load_class
 
 class MCTS:
     """ MCTS Callable

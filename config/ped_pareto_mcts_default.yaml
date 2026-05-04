@@ -1,31 +1,31 @@
 outdir: logs/test
 
 gen_model:
-  class_path: gen_models.rnn.GRUNextTokenLM
+  class_path: ped_pareto_mcts.gen_models.rnn.GRUNextTokenLM
   model_file: data/gen_models/rnn_test.pt
   vocab_file: data/gen_models/rnn_test_vocab.json
 
 MCTS:
-  class_path: mcts.pareto_cycler.ParetoMCTSCycler
+  class_path: ped_pareto_mcts.mcts.pareto_cycler.ParetoMCTSCycler
   max_gen_mols: 10
   exploration_const: 1.5
   maxlen: 30
   
 objective_functions:
   logP:
-    class_path: objectives.rdkit.logpObjective
+    class_path: ped_pareto_mcts.objectives.rdkit.logpObjective
     kwargs: {}
   QED:
-    class_path: objectives.rdkit.qedObjective
+    class_path: ped_pareto_mcts.objectives.rdkit.qedObjective
     kwargs: {}
   TPSA:
-    class_path: objectives.rdkit.tpsaObjective
+    class_path: ped_pareto_mcts.objectives.rdkit.tpsaObjective
     kwargs: {}
   MolWt:
-    class_path: objectives.rdkit.molwtObjective
+    class_path: ped_pareto_mcts.objectives.rdkit.molwtObjective
     kwargs: {}
   VinaScore:
-    class_path: objectives.smina_score.VinaScore
+    class_path: ped_pareto_mcts.objectives.smina_score.VinaScore
     kwargs:
       receptor_file: data/receptors/cb7.sdf
 

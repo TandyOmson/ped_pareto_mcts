@@ -1,4 +1,4 @@
-from base.reward import ObjectiveFunc
+from ped_pareto_mcts.base.reward import ObjectiveFunc
 from rdkit import Chem
 from rdkit.ML.Descriptors import MoleculeDescriptors
 

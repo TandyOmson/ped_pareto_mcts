@@ -1,6 +1,6 @@
 """ Applies an autoregressive generative model to execute expansion and rollouts 
 """
-from base.policies import ExpansionPolicy
+from ped_pareto_mcts.base.policies import ExpansionPolicy
 
 class GenerativeExpansion(ExpansionPolicy):
     """ Controls expansion using next-token probabilities from an autoreggresive generative model

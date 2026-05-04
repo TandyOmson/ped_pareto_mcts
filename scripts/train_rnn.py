@@ -1,6 +1,6 @@
 import argparse
-from gen_models.model_utils import tokenize_smiles, save_model, save_tokens
-from gen_models.rnn import GRUNextTokenLM, rnnTrainer
+from ped_pareto_mcts.gen_models.model_utils import tokenize_smiles, save_model, save_tokens
+from ped_pareto_mcts.gen_models.rnn import GRUNextTokenLM, rnnTrainer
 from pathlib import Path
 
 

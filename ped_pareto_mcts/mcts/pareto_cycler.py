@@ -1,12 +1,12 @@
 
 import logging
 
-from base.tree import Tree, Node
-from policies.puct import ParetoPUCT
-from policies.generative_expansion import GenerativeExpansion
-from policies.generative_rollout import GenerativeRollout
-from policies.global_pareto_archive import ParetoArchive, ParetoBackprop, Molecule
-from utils.utils import load_class
+from ped_pareto_mcts.base.tree import Tree, Node
+from ped_pareto_mcts.policies.puct import ParetoPUCT
+from ped_pareto_mcts.policies.generative_expansion import GenerativeExpansion
+from ped_pareto_mcts.policies.generative_rollout import GenerativeRollout
+from ped_pareto_mcts.policies.global_pareto_archive import ParetoArchive, ParetoBackprop, Molecule
+from ped_pareto_mcts.utils.utils import load_class
 
 # idea for later (change updated in ParetoArchive to updated and feedback, generating this payload)
 # from dataclasses import dataclass

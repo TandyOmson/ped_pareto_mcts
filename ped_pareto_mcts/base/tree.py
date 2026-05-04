@@ -1,5 +1,5 @@
 from typing import Hashable
-from base.reward import BackpropPayload
+from ped_pareto_mcts.base.reward import BackpropPayload
 
 Token = Hashable
 
