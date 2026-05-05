@@ -28,4 +28,8 @@ objective_functions:
     class_path: ped_pareto_mcts.objectives.smina_score.VinaScore
     kwargs:
       receptor_file: data/receptors/cb7.sdf
-
+  ped:
+    class_path: ped_pareto_mcts.objectives.ped.PairwiseEmbeddingDistance
+    kwargs:
+      encoder_file: /home/andyt/DProjects/Dself_sup_graph_learning/molecule_embedding_proj/data/models/test_model_pretrained_encoder.pt
+      smiles_to_graph_file: /home/andyt/DProjects/Dself_sup_graph_learning/molecule_embedding_proj/data/datasets/example/hydros_minimal_smiles_to_graph.json
