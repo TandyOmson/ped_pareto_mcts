@@ -51,6 +51,7 @@ class ParetoMCTSCycler:
         objective_vector = {}
         extra_reward_info = {}
         for obj in self.objective_functions:
+            obj.update_context(archive=self.archive)
             if hasattr(obj, "extra_reward_info"):
                 extra_reward_info[obj.name] = obj.extra_reward_info()
             objective_vector[obj.name] = obj.evaluate("".join(sequence[1:]))

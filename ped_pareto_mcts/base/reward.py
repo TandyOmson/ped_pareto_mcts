@@ -13,6 +13,12 @@ class ObjectiveFunc(ABC):
         self.name = name
 
     @abstractmethod
+    def update_context(self, *, archive=None):
+        """ Used to inject pareto front context to certain rewards
+        """
+        pass
+
+    @abstractmethod
     def evaluate(self, sample) -> float:
         raise NotImplementedError
 
