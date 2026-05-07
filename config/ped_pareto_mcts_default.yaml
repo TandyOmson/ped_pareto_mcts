@@ -2,14 +2,14 @@ outdir: logs/test
 
 gen_model:
   class_path: ped_pareto_mcts.gen_models.rnn.GRUNextTokenLM
-  model_file: data/gen_models/rnn_test.pt
-  vocab_file: data/gen_models/rnn_test_vocab.json
+  model_file: data/zinc_10k/rnn_model.pt
+  vocab_file: data/zinc_10k/rnn_vocab.json
 
 MCTS:
   class_path: ped_pareto_mcts.mcts.pareto_cycler.ParetoMCTSCycler
   max_gen_mols: 10
   exploration_const: 1.5
-  maxlen: 30
+  maxlen: 35
   
 objective_functions:
   logP:
@@ -31,5 +31,5 @@ objective_functions:
   ped:
     class_path: ped_pareto_mcts.objectives.ped.PairwiseEmbeddingDistance
     kwargs:
-      encoder_file: /home/andyt/DProjects/Dself_sup_graph_learning/molecule_embedding_proj/data/models/test_model_pretrained_encoder.pt
-      smiles_to_graph_file: /home/andyt/DProjects/Dself_sup_graph_learning/molecule_embedding_proj/data/datasets/example/hydros_minimal_smiles_to_graph.json
+      encoder_file: data/zinc_10k/zinc_10k_pretrained_encoder.pt
+      smiles_to_graph_file: data/zinc_10k/zinc_10k_config.json

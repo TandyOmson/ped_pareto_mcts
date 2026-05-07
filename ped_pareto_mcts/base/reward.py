@@ -12,7 +12,6 @@ class ObjectiveFunc(ABC):
     def __init__(self, name):
         self.name = name
 
-    @abstractmethod
     def update_context(self, *, archive=None):
         """ Used to inject pareto front context to certain rewards
         """

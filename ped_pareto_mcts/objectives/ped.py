@@ -12,6 +12,9 @@ import torch
 from pathlib import Path
 import numpy as np
 
+_model = None
+_stg = None
+
 def get_model(encoderfile, stgfile, map_location):
     global _model
     global _stg

@@ -69,7 +69,7 @@ class rnnTrainer():
         model: GRUNextTokenLM,
         sequences,              # List[List[str]]
         epochs=250,
-        lr=1e-4,
+        lr=1e-3,
     ):
         vocab = model.vocab
         pad = vocab.stoi[vocab.pad]

@@ -16,8 +16,8 @@ if __name__ == "__main__":
     smis = [i.strip() for i in open(Path(args.smiles)).readlines()]
     all_tokens, sequences = tokenize_smiles(smis)
 
-    model = GRUNextTokenLM(all_tokens, embed_dim=64, hidden_dim=128)
-    rnnTrainer.fit(model, sequences, epochs=5)
+    model = GRUNextTokenLM(all_tokens, embed_dim=128, hidden_dim=128)
+    rnnTrainer.fit(model, sequences, epochs=500)
 
     # probs = model.get_all_prob_next_symbol(["C", "C"])
     # print(probs)

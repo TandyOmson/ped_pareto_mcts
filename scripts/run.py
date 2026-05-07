@@ -40,10 +40,10 @@ def setup_logging(log_dir):
     log = logging.getLogger()
     log.setLevel(logging.DEBUG)
 
-    # try:
-    #     log_dir.mkdir(parents=False, exist_ok=False)
-    # except:
-    #     raise Exception(f"Log directory {log_dir} already exists. Exiting...")
+    try:
+        log_dir.mkdir(parents=False, exist_ok=False)
+    except:
+        raise Exception(f"Log directory {log_dir} already exists. Exiting...")
     
     formatter = logging.Formatter(
         fmt="%(asctime)s | %(name)s | %(levelname)s | %(message)s",
