@@ -34,7 +34,7 @@ class PairwiseEmbeddingDistance(ObjectiveFunc):
 
     def update_context(self, *, archive):       
         # convert pareto front members to smiles
-        archive_smiles = [i.smiles for i in archive]
+        archive_smiles = [i.sequence for i in archive]
         self._embed_ref = [self.get_embeddings(smi) for smi in archive_smiles]
 
     def evaluate(self, smi):

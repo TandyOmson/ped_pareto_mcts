@@ -55,7 +55,7 @@ class ParetoMCTSCycler:
             if hasattr(obj, "extra_reward_info"):
                 extra_reward_info[obj.name] = obj.extra_reward_info()
             objective_vector[obj.name] = obj.evaluate("".join(sequence[1:]))
-        newmol = Molecule(sequence=sequence, reward=objective_vector)
+        newmol = Molecule(sequence="".join(sequence[1:]), reward=objective_vector)
         
         backprop_payload = ParetoBackprop(objective_vector, self.archive)
         self.tree.backpropagate(leaf, backprop_payload)
