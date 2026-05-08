@@ -2,32 +2,9 @@ from rdkit import Chem
 from rdkit.Chem import AllChem
 import subprocess as sp
 
-def add_nitrogen_charges(m):
-    m.UpdatePropertyCache(strict=False)
-    ps = Chem.DetectChemistryProblems(m)
-    if not ps:
-        Chem.SanitizeMol(m)
-        return m
-    for p in ps:
-        if p.GetType()=='AtomValenceException':
-            at = m.GetAtomWithIdx(p.GetAtomIdx())
-            if at.GetAtomicNum()==7 and at.GetFormalCharge()==0 and at.GetExplicitValence()==4:
-                at.SetFormalCharge(1)
-            if at.GetAtomicNum()==7 and at.GetFormalCharge()==0:
-                bondcount = 0
-                for b in at.GetBonds():
-                    bondcount += b.GetBondTypeAsDouble()
-                if int(bondcount) > 3:
-                    at.SetFormalCharge(1)
-                
-    Chem.SanitizeMol(m)
-    return m
-
 def rdkit_robust_embed(mol):
     if mol == None:
         raise Exception
-    
-    mol = Chem.AddHs(mol)
 
     res = AllChem.EmbedMolecule(mol)
     if res == -1:
@@ -55,9 +32,7 @@ def openbabel_embed(smi):
 
     return mol
 
-def embed_mol(smi):
-    mol = Chem.MolFromSmiles(smi)
-    
+def embed_mol(mol):
     try:
         mol = rdkit_robust_embed(mol)
     except:

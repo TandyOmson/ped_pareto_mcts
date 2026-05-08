@@ -6,8 +6,14 @@ import logging
 import sys
 import pprint
 from pathlib import Path
+import csv
 
 from ped_pareto_mcts.utils.utils import load_model, load_tokens, load_class
+
+def normalise_str(v):
+    if isinstance(v, str):
+        return v.replace("\n", "\\n")
+    return v
 
 class MCTS:
     """ MCTS Callable
@@ -26,15 +32,31 @@ class MCTS:
         cyclerClass = load_class(Path(self.config["MCTS"]["class_path"]))
         cycler = cyclerClass(model, self.config)
 
-        while self.total_gen_mols < self.config["MCTS"]["max_gen_mols"]:
-            step_log = cycler.step()
-            self.total_gen_mols += 1
+        
+        with open(Path(config["outdir"]) / "log.csv", "w", newline="") as f:
+            writer = None
+            while self.total_gen_mols < self.config["MCTS"]["max_gen_mols"]:
+                step_log = cycler.step()
+                self.total_gen_mols += 1
+            
+                log.info(f"STEP {self.total_gen_mols}")
+                log.debug(pprint.pformat(step_log, compact=True))
 
-            log.info(f"STEP {self.total_gen_mols}")
-            log.debug(pprint.pformat(step_log, width=2))
+                if step_log:
+                    step_dict = {"gen_num" : self.total_gen_mols} | {"smiles": step_log["molecule"]} | {i:k for i,k in step_log["reward"].items()}
+                    step_dict = {k: normalise_str(v) for k, v in step_dict.items()}
+                    
+                    if writer is None:
+                        writer = csv.DictWriter(
+                            f,
+                            fieldnames=step_dict.keys(),
+                        )
+                        writer.writeheader()
+                    
+                    writer.writerow(step_dict)
 
         # key result
-        return self.cycler.pareto_front
+        return cycler.archive.front
     
 def setup_logging(log_dir):
     log = logging.getLogger()
@@ -86,4 +108,4 @@ if __name__ == "__main__":
     final_pareto_front = MCTS(config)()
 
     log.info("FINAL RESULT:")
-    log.info(pprint.pformat(final_pareto_front, width=1))
+    log.info(pprint.pformat(final_pareto_front, compact=True))

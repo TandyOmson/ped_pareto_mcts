@@ -7,6 +7,7 @@ from ped_pareto_mcts.policies.generative_expansion import GenerativeExpansion
 from ped_pareto_mcts.policies.generative_rollout import GenerativeRollout
 from ped_pareto_mcts.policies.global_pareto_archive import ParetoArchive, ParetoBackprop, Molecule
 from ped_pareto_mcts.utils.utils import load_class
+from ped_pareto_mcts.utils.rdmol_utils import smiles_to_mol
 
 # idea for later (change updated in ParetoArchive to updated and feedback, generating this payload)
 # from dataclasses import dataclass
@@ -47,6 +48,12 @@ class ParetoMCTSCycler:
         leaf, root_to_leaf = self.selection.traverse(self.tree.root)        
         possible_child_nodes = self.expansion.expand(leaf)
         sequence = self.rollout.simulate(leaf)
+
+        # validate generated sequence(s) (add configs to this)
+        try:
+            smiles_to_mol("".join(sequence[1:]), allow_charges=False)
+        except:
+            return None
         
         objective_vector = {}
         extra_reward_info = {}
@@ -65,10 +72,13 @@ class ParetoMCTSCycler:
         # return logging info
         step_info = {}
         step_info["leaf"] = leaf
-        step_info["possible_child_nodes"] = possible_child_nodes
+        #step_info["possible_child_nodes"] = possible_child_nodes
         step_info["root_to_leaf"] = root_to_leaf
-        step_info["molecule"] = sequence
-        step_info["pareto_front"] = self.archive.front  
+        
+        step_info["molecule"] = "".join(sequence[1:])
+        step_info["reward"] = objective_vector
         step_info["reward_info"] = extra_reward_info
+
+        step_info["pareto_front"] = self.archive.front  
         
         return step_info

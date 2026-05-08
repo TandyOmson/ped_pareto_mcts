@@ -43,7 +43,7 @@ class PairwiseEmbeddingDistance(ObjectiveFunc):
                 return 0.0
             else:
                 z = self.get_embeddings(smi)
-                return min(np.linalg.norm(z - z_i) for z_i in self._embed_ref)
+                return float(min(np.linalg.norm(z - z_i) for z_i in self._embed_ref))
         
     def get_embeddings(self, smi):
         # convert smiles to graph based on spec from ssl_graph_encoder

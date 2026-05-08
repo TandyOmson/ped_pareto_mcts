@@ -1,4 +1,5 @@
 from ped_pareto_mcts.base.reward import ObjectiveFunc
+from ped_pareto_mcts.utils.rdmol_utils import smiles_to_mol
 from rdkit import Chem
 from rdkit.ML.Descriptors import MoleculeDescriptors
 
@@ -7,7 +8,7 @@ class logpObjective(ObjectiveFunc):
         super().__init__(name)
 
     def evaluate(self, smi):
-        m = Chem.MolFromSmiles(smi)
+        m = smiles_to_mol(smi)
         return MoleculeDescriptors.MolecularDescriptorCalculator(["MolLogP"]).CalcDescriptors(m)[0]
 
 class qedObjective(ObjectiveFunc):
@@ -15,7 +16,7 @@ class qedObjective(ObjectiveFunc):
         super().__init__(name)
 
     def evaluate(self, smi):
-        m = Chem.MolFromSmiles(smi)
+        m = smiles_to_mol(smi)
         return MoleculeDescriptors.MolecularDescriptorCalculator(["qed"]).CalcDescriptors(m)[0]
     
 class tpsaObjective(ObjectiveFunc):
@@ -23,7 +24,7 @@ class tpsaObjective(ObjectiveFunc):
         super().__init__(name)
 
     def evaluate(self, smi):
-        m = Chem.MolFromSmiles(smi)
+        m = smiles_to_mol(smi)
         return MoleculeDescriptors.MolecularDescriptorCalculator(["TPSA"]).CalcDescriptors(m)[0]
     
 class molwtObjective(ObjectiveFunc):
@@ -31,5 +32,5 @@ class molwtObjective(ObjectiveFunc):
         super().__init__(name)
 
     def evaluate(self, smi):
-        m = Chem.MolFromSmiles(smi)
+        m = smiles_to_mol(smi)
         return MoleculeDescriptors.MolecularDescriptorCalculator(["MolWt"]).CalcDescriptors(m)[0]

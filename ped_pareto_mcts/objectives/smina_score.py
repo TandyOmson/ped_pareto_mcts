@@ -4,6 +4,7 @@ from pathlib import Path
 from rdkit import Chem
 
 from ped_pareto_mcts.base.reward import ObjectiveFunc
+from ped_pareto_mcts.utils.rdmol_utils import smiles_to_mol
 from ped_pareto_mcts.objectives.objecitve_utils import embed_mol
 
 class VinaScore(ObjectiveFunc):
@@ -14,7 +15,8 @@ class VinaScore(ObjectiveFunc):
 
     def evaluate(self, smi):
         with tempfile.TemporaryDirectory() as rundir:
-            mol = embed_mol(smi)
+            m = smiles_to_mol(smi)
+            mol = embed_mol(m)
             Chem.MolToMolFile(mol, rundir + "ligand.sdf")
 
             smina_cmd_output = rundir + "vina.log"
@@ -43,9 +45,11 @@ class VinaScore(ObjectiveFunc):
                     lines = lines.split()
                     if len(lines) == 4 and lines[0] == '1':
                         affinity = float(lines[1])
+
             p = sp.Popen('rm -rf ' + smina_cmd_output, shell=True, stdout=sp.PIPE)
             p.communicate()
             p = sp.Popen('rm -rf ' + rundir + "ligand.sdf", shell=True, stdout=sp.PIPE)
             p.communicate()
 
-        return affinity
+        # all objectives are optimised
+        return -affinity
