@@ -34,13 +34,16 @@ class PairwiseEmbeddingDistance(ObjectiveFunc):
 
     def update_context(self, *, archive):       
         # convert pareto front members to smiles
-        archive_smiles = [i.sequence for i in archive]
+        archive_smiles = [i.sequence for i in archive.front]
         self._embed_ref = [self.get_embeddings(smi) for smi in archive_smiles]
 
     def evaluate(self, smi):
         with torch.no_grad():
-            z = self.get_embeddings(smi)
-            return min(np.linalg.norm(z - z_i) for z_i in self._embed_ref)
+            if self._embed_ref == []:
+                return 0.0
+            else:
+                z = self.get_embeddings(smi)
+                return min(np.linalg.norm(z - z_i) for z_i in self._embed_ref)
         
     def get_embeddings(self, smi):
         # convert smiles to graph based on spec from ssl_graph_encoder
