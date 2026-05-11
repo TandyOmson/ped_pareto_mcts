@@ -51,7 +51,7 @@ class ParetoMCTSCycler:
 
         # validate generated sequence(s) (add configs to this)
         try:
-            smiles_to_mol("".join(sequence[1:]), allow_charges=False)
+            smiles_to_mol("".join(sequence[1:-1]), allow_charges=False)
         except:
             return None
         
@@ -61,8 +61,8 @@ class ParetoMCTSCycler:
             obj.update_context(archive=self.archive)
             if hasattr(obj, "extra_reward_info"):
                 extra_reward_info[obj.name] = obj.extra_reward_info()
-            objective_vector[obj.name] = obj.evaluate("".join(sequence[1:]))
-        newmol = Molecule(sequence="".join(sequence[1:]), reward=objective_vector)
+            objective_vector[obj.name] = obj.evaluate("".join(sequence[1:-1]))
+        newmol = Molecule(sequence="".join(sequence[1:-1]), reward=objective_vector)
         
         backprop_payload = ParetoBackprop(objective_vector, self.archive)
         self.tree.backpropagate(leaf, backprop_payload)
@@ -75,7 +75,7 @@ class ParetoMCTSCycler:
         #step_info["possible_child_nodes"] = possible_child_nodes
         step_info["root_to_leaf"] = root_to_leaf
         
-        step_info["molecule"] = "".join(sequence[1:])
+        step_info["molecule"] = "".join(sequence[1:-1])
         step_info["reward"] = objective_vector
         step_info["reward_info"] = extra_reward_info
 

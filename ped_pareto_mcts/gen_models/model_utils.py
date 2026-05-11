@@ -9,7 +9,6 @@ def tokenize_smiles(smiles_list, use_selfies=False):
     unique_token_set = set()
     for smi in smiles_list:
         tokenized_smiles = selfies_tokenizer_from_smiles(smi) if use_selfies else smi_tokenizer(smi)
-        tokenized_smiles.append("\n")
         unique_token_set |= set(tokenized_smiles)
         tokenized_smiles_list.append(tokenized_smiles)
     return sorted(list(unique_token_set)), tokenized_smiles_list
@@ -23,7 +22,6 @@ def smi_tokenizer(smi):
     regex = re.compile(pattern)
     tokens = [token for token in regex.findall(smi)]
     assert smi == "".join(tokens)
-    tokens.insert(0, "&")
     return tokens
 
 def selfies_tokenizer_from_smiles(smi):
@@ -33,7 +31,6 @@ def selfies_tokenizer_from_smiles(smi):
     slfs = sf.encoder(smi)
     tokens = list(sf.split_selfies(slfs))
     assert slfs == "".join(tokens)
-    tokens.insert(0, "&")
     return tokens
 
 def save_model(model, path: str):
@@ -45,8 +42,8 @@ def save_model(model, path: str):
             "state_dict": model.state_dict(),
             "config": {
                 "embed_dim": model.emb.embedding_dim,
-                "hidden_dim": model.gru.hidden_size,
-                "num_layers": model.gru.num_layers,
+                "hidden_dim": model.lstm.hidden_size,
+                "num_layers": model.lstm.num_layers,
             },
         },
         path,

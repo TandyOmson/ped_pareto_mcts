@@ -21,34 +21,55 @@ class Vocab:
     def decode(self, ids):
         return [self.itos[i] for i in ids]
 
-class LSTMNextTokenLM(nn.Module):
+class TransformerNextTokenLM(nn.Module):
     """ MolGPT-like causal transformer decoder for next token prediction
     """
-    def __init__(self, vocab: list, embed_dim=128, hidden_dim=256, num_layers=2):
+    def __init__(self, 
+                 all_tokens,
+                 d_model=256, 
+                 nhead=8, 
+                 num_layers=6, 
+                 dim_feedforward=1024, 
+                 dropout=0.1, 
+                 max_len=30
+                 ):
         super().__init__()
-        self.vocab = Vocab(vocab)
+
+        self.vocab = Vocab(all_tokens)
+        self.vocab_size = self.vocab.size
         self.pad_idx = self.vocab.stoi[self.vocab.pad]
-        
-        # embed token IDs to vectors, padding token does not contribute to gradients
-        self.emb = nn.Embedding(self.vocab.size, embed_dim, padding_idx=self.pad_idx)
+        self.max_len = max_len
+        self.d_model = d_model
 
-        # output hidden states
-        self.lstm = nn.LSTM(embed_dim, hidden_dim, batch_first=True)
+        self.tok_emb = nn.Embedding(self.vocab_size, d_model, padding_idx=self.pad_idx)
+        self.pos_emb = nn.Embedding(max_len, d_model)
 
-        # project hidden states to vocab size for next token prediction
-        self.proj = nn.Linear(hidden_dim, self.vocab.size)
+        enc_layer = nn.TransformerEncoderLayer(
+            d_model=d_model, nhead=nhead,
+            dim_feedforward=dim_feedforward, dropout=dropout,
+            batch_first=True, activation="gelu", norm_first=True
+        )
+        self.transformer_encoder = nn.TransformerEncoder(enc_layer, num_layers=num_layers)
+        self.lm_head = nn.Linear(d_model, self.vocab_size, bias=False) 
+
+    def _causal_mask(self, T, device):
+        # True masks the item going into the transformer
+        return torch.triu(torch.ones(T, T, device=device, dtype=torch.bool), diagonal=1)
 
     def forward_logits(self, x, state=None):
-        # x: [batch_size, seq_len] token IDs
-        lengths = (x != self.pad_idx).sum(dim=1)
-        lengths_cpu = lengths.clamp(min=1).cpu()
+        # x: [batch_size, seq_length]
+        B, T = x.shape
+        device = x.device
 
-        emb = self.emb(x)
-        packed_emb = rnn_utils.pack_padded_sequence(emb, lengths_cpu, batch_first=True, enforce_sorted=False)
-        packed_out, new_state = self.lstm(packed_emb, state)
-        out, _ = rnn_utils.pad_packed_sequence(packed_out, batch_first=True, total_length=x.size(1))
-        logits = self.proj(out)  # [batch_size, seq_len, vocab_size]
-        return logits, new_state
+        pos = torch.arange(T, device=device).unsqueeze(0).expand(B, T)
+        h = self.tok_emb(x) + self.pos_emb(pos)
+
+        attn_mask = self._causal_mask(T, device)
+        key_padding_mask = (x == self.pad_idx)
+
+        h = self.transformer_encoder(h, mask=attn_mask, src_key_padding_mask=key_padding_mask)
+        logits =  self.lm_head(h) # [batch_size, seq_length, vocab_size]
+        return logits, None
 
     @torch.no_grad()
     def get_all_prob_next_symbol(self, seq, temperature=1.0):
@@ -65,35 +86,22 @@ class LSTMNextTokenLM(nn.Module):
         probs = F.softmax(logits, dim=-1)[0]
         return {self.vocab.itos[i]: float(probs[i]) for i in range(self.vocab.size)}
     
-    @torch.no_grad()
-    def step(self, token_idx, state=None, temperature=1.0):
-        """ 
-        Alternative integration into MCTS
-        Requires caching hidden states in nodes (memory tradeoff, but faster inference)
-        """
-        self.eval()
-        device = next(self.parameters()).device
-        ids = torch.as_tensor([[token_idx]], dtype=torch.long, device=device)
-        logits, new_state = self.forward_logits(ids, state=state)
-        logits = logits[:, -1] / max(temperature, 1e-8)
-        probs = F.softmax(logits, dim=-1)[0]
-        return probs, new_state
-    
-class LSTMTrainer():
-
+class TransformerTrainer():
     @staticmethod
     def fit(
-        model: LSTMNextTokenLM,
+        model: TransformerNextTokenLM,
         sequences,              
         epochs=250,
         lr=1e-3,
     ):
         vocab = model.vocab
         pad = vocab.stoi[vocab.pad]
+        bos = vocab.stoi[vocab.bos]
+        eos = vocab.stoi[vocab.eos]
 
         # encode
-        encoded = [vocab.encode(s) for s in sequences]
-        max_len = max(len(s) for s in encoded)
+        encoded = [[bos] + vocab.encode(s) + [eos] for s in sequences]
+        max_len = model.max_len
 
         # pad
         x = torch.full((len(encoded), max_len), pad, dtype=torch.long)
@@ -103,6 +111,8 @@ class LSTMTrainer():
         # teacher forcing (i.e. training on all possible unfinished sequences)
         inputs  = x[:, :-1]
         targets = x[:, 1:]
+
+        # training is currently fully teacher forced, could also predict multiple steps ahead or use scheduled sampling (gradually reduce teacher forcing)
 
         device = next(model.parameters()).device
         inputs, targets = inputs.to(device), targets.to(device)

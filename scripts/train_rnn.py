@@ -1,6 +1,7 @@
 import argparse
 from ped_pareto_mcts.gen_models.model_utils import tokenize_smiles, save_model, save_tokens
-from ped_pareto_mcts.gen_models.rnn import GRUNextTokenLM, rnnTrainer
+from ped_pareto_mcts.gen_models.transformer import TransformerNextTokenLM, TransformerTrainer
+from ped_pareto_mcts.gen_models.rnn import LSTMNextTokenLM, LSTMTrainer
 from pathlib import Path
 
 
@@ -14,15 +15,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     smis = [i.strip() for i in open(Path(args.smiles)).readlines()]
-    all_tokens, sequences = tokenize_smiles(smis)
+    all_tokens, sequences = tokenize_smiles(smis, use_selfies=True)
     print(all_tokens)
-    exit()
 
-    model = GRUNextTokenLM(all_tokens, embed_dim=128, hidden_dim=128)
-    rnnTrainer.fit(model, sequences, epochs=500)
-
-    # probs = model.get_all_prob_next_symbol(["C", "C"])
-    # print(probs)
+    model = LSTMNextTokenLM(all_tokens)
+    LSTMTrainer.fit(model, sequences, epochs=5)
 
     print("vocab_size:", len(model.vocab.itos))
     save_model(model, Path(args.model_out))
