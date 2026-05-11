@@ -24,11 +24,12 @@ class Vocab:
 class LSTMNextTokenLM(nn.Module):
     """ MolGPT-like causal transformer decoder for next token prediction
     """
-    def __init__(self, vocab: list, embed_dim=128, hidden_dim=256, num_layers=2):
+    def __init__(self, vocab: list, embed_dim=128, hidden_dim=256, max_len=30):
         super().__init__()
         self.vocab = Vocab(vocab)
         self.pad_idx = self.vocab.stoi[self.vocab.pad]
-        
+        self.max_len = max_len
+
         # embed token IDs to vectors, padding token does not contribute to gradients
         self.emb = nn.Embedding(self.vocab.size, embed_dim, padding_idx=self.pad_idx)
 
@@ -90,9 +91,12 @@ class LSTMTrainer():
     ):
         vocab = model.vocab
         pad = vocab.stoi[vocab.pad]
+        bos = vocab.stoi[vocab.bos]
+        eos = vocab.stoi[vocab.eos]
 
         # encode
-        encoded = [vocab.encode(s) for s in sequences]
+        encoded = [[bos] + vocab.encode(s) + [eos] for s in sequences]
+        max_len = model.max_len
         max_len = max(len(s) for s in encoded)
 
         # pad

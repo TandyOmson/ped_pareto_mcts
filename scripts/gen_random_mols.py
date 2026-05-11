@@ -51,6 +51,7 @@ if __name__ == "__main__":
     mol_images = []
     for _ in range(args.num_mols):
         new_seq = get_max_prob_sequence()
+        print("".join(new_seq), len(new_seq)-2)
         try:
             mol = Chem.MolFromSmiles(sf.decoder("".join(new_seq[1:-1])))
             if mol is None:
