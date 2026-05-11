@@ -15,7 +15,7 @@ class ParetoPUCT(SelectionPolicy):
         node = root_node
         root_to_leaf = [node.token]
         # while non-terminal valid leaf node
-        while len(node.children) != 0 and node.token != '$':
+        while len(node.children) != 0 and node.token != '<eos>':
             node = self.select(node)
             root_to_leaf.append(node.token)
 

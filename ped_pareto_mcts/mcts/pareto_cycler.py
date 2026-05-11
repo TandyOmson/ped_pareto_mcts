@@ -23,7 +23,7 @@ class ParetoMCTSCycler:
     def __init__(self, gen_model, config):
         # Initialise tree object and pareto archive
         # Node stats are defined in ParetoStats above
-        root_node = Node(token='&', parent=None)
+        root_node = Node(token='<bos>', parent=None)
         self.tree = Tree(root_node)
         self.archive = ParetoArchive()
 

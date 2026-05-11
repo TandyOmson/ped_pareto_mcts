@@ -15,7 +15,7 @@ class GenerativeExpansion(ExpansionPolicy):
         while current_node.parent is not None:
             path.insert(0, current_node.token)
             current_node = current_node.parent
-        path.insert(0, '&')
+        path.insert(0, '<bos>')
         
         prob_dict = self.model.get_all_prob_next_symbol(path)
 
