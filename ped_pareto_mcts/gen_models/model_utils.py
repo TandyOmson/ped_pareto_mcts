@@ -33,18 +33,14 @@ def selfies_tokenizer_from_smiles(smi):
     assert slfs == "".join(tokens)
     return tokens
 
-def save_model(model, path: str):
-    path = Path(path)
+def save_model(model, path, class_path, model_config=None):
     path.parent.mkdir(parents=True, exist_ok=True)
 
     torch.save(
         {
             "state_dict": model.state_dict(),
-            "config": {
-                "embed_dim": model.emb.embedding_dim,
-                "hidden_dim": model.lstm.hidden_size,
-                "num_layers": model.lstm.num_layers,
-            },
+            "model_class_path": class_path,
+            "config": model_config if model_config is not None else {},
         },
         path,
     )

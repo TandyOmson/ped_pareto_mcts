@@ -1,0 +1,6 @@
+model_class_path: ped_pareto_mcts.gen_models.rnn.LSTMNextTokenLM
+d_model: 128
+nhead: 4
+num_layers: 2
+dim_feedforward: 256
+max_len: 100

@@ -1,7 +1,9 @@
 import importlib
 import inspect
 import json
+import pathlib
 import torch
+import pathlib
 
 def load_class(class_path):
     module_name, class_name = str(class_path).rsplit(".", 1)
@@ -49,11 +51,14 @@ def filter_class_config(cls, **config):
 
     return {k: v for k, v in config.items() if k in accepted}
 
-def load_model(modelClass, modelpath, vocab, device="cpu"):
+def load_model(modelpath, vocab, device="cpu"):
+    torch.serialization.add_safe_globals([pathlib.PosixPath])
     checkpoint = torch.load(modelpath, map_location=device)
-    
+
+    modelClass = load_class(checkpoint["model_class_path"]) 
+
     model = modelClass(
-        vocab=vocab,
+        vocab,
         **checkpoint["config"],
     )
 
