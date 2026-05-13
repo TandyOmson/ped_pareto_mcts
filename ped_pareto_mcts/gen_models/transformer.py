@@ -17,7 +17,7 @@ class TransformerNextTokenLM(GenModel):
                  ):
         super().__init__(all_tokens, d_model, max_len)
 
-        self.tok_emb = nn.Embedding(self.vocab_size, d_model, padding_idx=self.pad_idx)
+        self.tok_emb = nn.Embedding(self.vocab.size, d_model, padding_idx=self.pad_idx)
         self.pos_emb = nn.Embedding(max_len, d_model)
 
         enc_layer = nn.TransformerEncoderLayer(
@@ -26,7 +26,7 @@ class TransformerNextTokenLM(GenModel):
             batch_first=True, activation="gelu", norm_first=True
         )
         self.transformer_encoder = nn.TransformerEncoder(enc_layer, num_layers=num_layers)
-        self.lm_head = nn.Linear(d_model, self.vocab_size, bias=False) 
+        self.lm_head = nn.Linear(d_model, self.vocab.size, bias=False) 
 
     def _causal_mask(self, T, device):
         # True masks the item going into the transformer

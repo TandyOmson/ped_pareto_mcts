@@ -1,4 +1,4 @@
-model_class_path: ped_pareto_mcts.gen_models.rnn.LSTMNextTokenLM
+model_class_path: ped_pareto_mcts.gen_models.transformer.TransformerNextTokenLM
 d_model: 128
 nhead: 4
 num_layers: 2

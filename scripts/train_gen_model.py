@@ -25,6 +25,8 @@ if __name__ == "__main__":
             train_config = yaml.safe_load(f)
             # training method and its config (if I add options other than .fit)
             method = train_config.pop("method")
+    else:
+        method = None
 
     smis = [i.strip() for i in open(Path(args.smiles)).readlines()]
     all_tokens, sequences = tokenize_smiles(smis, use_selfies=True)
@@ -34,10 +36,13 @@ if __name__ == "__main__":
     modelClass = load_class(model_class_path)
     model = modelClass(all_tokens, **model_config)
 
-    if method == "fit":
-        GenModelTrainer.fit(model, sequences, epochs=250)
+    if method is not None:
+        if method == "fit":
+            GenModelTrainer.fit(model, sequences, epochs=250)
+        else:
+            raise ValueError(f"Unknown training method: {method}")
     else:
-        raise ValueError(f"Unknown training method: {method}")
+        GenModelTrainer.fit(model, sequences, epochs=250)
 
     print("vocab_size:", len(model.vocab.itos))
     save_model(model, Path(args.model_out), model_class_path, model_config=model_config)
