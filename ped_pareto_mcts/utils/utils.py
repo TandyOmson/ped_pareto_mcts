@@ -51,9 +51,9 @@ def filter_class_config(cls, **config):
 
     return {k: v for k, v in config.items() if k in accepted}
 
-def load_model(modelpath, vocab, device="cpu"):
+def load_model(modelfilepath, vocab, device="cpu"):
     torch.serialization.add_safe_globals([pathlib.PosixPath])
-    checkpoint = torch.load(modelpath, map_location=device)
+    checkpoint = torch.load(modelfilepath, map_location=device)
 
     modelClass = load_class(checkpoint["model_class_path"]) 
 
@@ -68,7 +68,7 @@ def load_model(modelpath, vocab, device="cpu"):
 
     return model
 
-def load_tokens(tokenpath):
-    with open(tokenpath, "r") as f:
+def load_tokens(tokenfilepath):
+    with open(tokenfilepath, "r") as f:
         tokens = json.load(f)
     return tokens

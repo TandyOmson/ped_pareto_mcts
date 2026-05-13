@@ -5,7 +5,7 @@ from pathlib import Path
 
 from networkx import display
 
-from ped_pareto_mcts.utils.utils import load_model, load_tokens, load_class
+from ped_pareto_mcts.utils.utils import load_model, load_tokens
 from ped_pareto_mcts.policies.generative_rollout import GenerativeRollout
 from ped_pareto_mcts.base.tree import Node
 from ped_pareto_mcts.gen_models.model_utils import tokenize_smiles
@@ -15,7 +15,6 @@ from rdkit.Chem import Draw
 
 if __name__ == "__main__":
     parse = argparse.ArgumentParser()
-    parse.add_argument("--gen_model_class_path", type=str, required=True)
     parse.add_argument("--model_file", type=str, required=True)
     parse.add_argument("--vocab_file", type=str, required=True)
     parse.add_argument("--num_mols", type=int, default=10)
@@ -24,10 +23,9 @@ if __name__ == "__main__":
     parse.add_argument("--outimages", type=str, required=False)
 
     args = parse.parse_args()
-    
-    modelClass = load_class(args.gen_model_class_path)
+
     all_tokens = load_tokens(Path(args.vocab_file))
-    model = load_model(modelClass, Path(args.model_file), all_tokens)
+    model = load_model(Path(args.model_file), load_tokens(Path(args.vocab_file)))
 
     def get_max_prob_sequence():
         if not args.prefix:
@@ -49,17 +47,29 @@ if __name__ == "__main__":
         return path
     
     mol_images = []
+    new_seqs = []
+    new_seq_lens = []
+    new_smiles = []
     for _ in range(args.num_mols):
         new_seq = get_max_prob_sequence()
-        print("".join(new_seq), len(new_seq)-2)
+        new_seq_lens.append(len(new_seq)-2)
+        new_seqs.append("".join(new_seq))
+        new_smi = sf.decoder("".join(new_seq[1:-1]))
+        new_smiles.append(new_smi)
         try:
-            mol = Chem.MolFromSmiles(sf.decoder("".join(new_seq[1:-1])))
+            mol = Chem.MolFromSmiles(new_smi)
             if mol is None:
                 raise Exception
             mol_images.append(mol)
         except:
             print("Invalid molecule:", "".join(new_seq[1:-1]))
 
+    print("raw sequences")
+    for i, j in zip(new_seqs, new_seq_lens):
+        print(i, j)
+    print("generated smiles")
+    for i in new_smiles:
+        print(i)
     # save sample of generated molecules
     if args.outimages is not None:
         img = Draw.MolsToGridImage(mol_images[:25], molsPerRow=5)
