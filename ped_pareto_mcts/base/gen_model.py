@@ -119,3 +119,57 @@ class GenModelTrainer:
                 loss.backward()
                 opt.step()
                 t.set_postfix(loss=f"{loss.item():.4f}")
+
+
+    @staticmethod
+    def fit_scheduled_sampling(
+        model: GenModel,
+        sequences: list,
+        epochs: int = 250,
+        lr: float = 1e-3,
+    ):
+        """ Schedule sampling initially uses teacher forcing, gradually starts using model predictions (hill climbing style)
+            This means that ground truth are no longer inputs, but fixed instability at start of hill climbing
+        """
+        vocab = model.vocab
+        pad = vocab.stoi[vocab.pad]
+        bos = vocab.stoi[vocab.bos]
+        eos = vocab.stoi[vocab.eos]
+
+        # encode
+        encoded = [[bos] + vocab.encode(s) + [eos] for s in sequences]
+        max_len = model.max_len
+        max_len = max(len(s) for s in encoded)
+
+        # pad
+        x = torch.full((len(encoded), max_len), pad, dtype=torch.long)
+        for i, s in enumerate(encoded):
+            x[i, :len(s)] = torch.tensor(s)
+
+        inputs  = x[:, :-1]
+        targets = x[:, 1:]
+
+        device = next(model.parameters()).device
+        inputs, targets = inputs.to(device), targets.to(device)
+
+        opt = torch.optim.Adam(model.parameters(), lr=lr)
+        loss_fn = nn.CrossEntropyLoss(ignore_index=pad)
+
+        model.train()
+        with trange(epochs) as t:
+            for ep in t:
+                t.set_description('Training RNN: epoch %d' % (ep + 1))
+                # Scheduled sampling: at timestep t, choose input as ground truth or model prediction increasing probabiliy of model prediction
+                decay_rate = 0.95
+                teacher_prob = max(0.1, decay_rate ** ep)
+                
+                logits, _ = model.forward_logits_scheduled(inputs, teacher_prob)
+                loss = loss_fn(
+                    logits.reshape(-1, vocab.size),
+                    targets.reshape(-1),
+                )
+
+                opt.zero_grad()
+                loss.backward()
+                opt.step()
+                t.set_postfix(loss=f"{loss.item():.4f}")
