@@ -37,9 +37,10 @@ if __name__ == "__main__":
             GenModelTrainer.fit(model, sequences, epochs=250, train_config=train_config)
         if train_config["training_method"] == "scheduled_sampling":
             GenModelTrainer.fit_scheduled_sampling(model, sequences, epochs=250, train_config=train_config)
+        else:
             raise ValueError(f"Unknown training method: {train_config['training_method']}")
     else:
-        GenModelTrainer.fit(model, sequences, epochs=250)
+        GenModelTrainer.fit(model, sequences, epochs=250, train_config=train_config)
 
     print("vocab_size:", len(model.vocab.itos))
     save_model(model, Path(args.model_out), Path(config["model_class_path"]), model_config=model_config)
