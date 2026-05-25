@@ -77,7 +77,7 @@ class GenModelTrainer:
         model: GenModel,
         sequences : list,              
         epochs : int = 250,
-        lr: float = 1e-3,
+        train_config: dict = None,
     ):
         
         vocab = model.vocab
@@ -102,7 +102,8 @@ class GenModelTrainer:
         device = next(model.parameters()).device
         inputs, targets = inputs.to(device), targets.to(device)
 
-        opt = torch.optim.Adam(model.parameters(), lr=lr)
+        opt = torch.optim.Adam(model.parameters(), lr=train_config.get("lr", 1e-3))
+        scheduler = torch.optim.lr_scheduler.ExponentialLR(opt, gamma=train_config.get("lr_decay", 0.00))
         loss_fn = nn.CrossEntropyLoss(ignore_index=pad)
 
         model.train()
@@ -118,6 +119,7 @@ class GenModelTrainer:
                 opt.zero_grad()
                 loss.backward()
                 opt.step()
+                scheduler.step()
                 t.set_postfix(loss=f"{loss.item():.4f}")
 
 
@@ -126,7 +128,7 @@ class GenModelTrainer:
         model: GenModel,
         sequences: list,
         epochs: int = 250,
-        lr: float = 1e-3,
+        train_config: dict = None,
     ):
         """ Schedule sampling initially uses teacher forcing, gradually starts using model predictions (hill climbing style)
             This means that ground truth are no longer inputs, but fixed instability at start of hill climbing
@@ -152,7 +154,8 @@ class GenModelTrainer:
         device = next(model.parameters()).device
         inputs, targets = inputs.to(device), targets.to(device)
 
-        opt = torch.optim.Adam(model.parameters(), lr=lr)
+        opt = torch.optim.Adam(model.parameters(), lr=train_config.get("lr", 1e-3))
+        scheduler = torch.optim.lr_scheduler.ExponentialLR(opt, gamma=train_config.get("lr_decay", 0.00))
         loss_fn = nn.CrossEntropyLoss(ignore_index=pad)
 
         model.train()
@@ -160,8 +163,8 @@ class GenModelTrainer:
             for ep in t:
                 t.set_description('Training RNN: epoch %d' % (ep + 1))
                 # Scheduled sampling: at timestep t, choose input as ground truth or model prediction increasing probabiliy of model prediction
-                decay_rate = 0.95
-                teacher_prob = max(0.1, decay_rate ** ep)
+                teacher_decay_rate = train_config.get("teacher_decay", 0.95)
+                teacher_prob = max(0.1, teacher_decay_rate ** ep)
                 
                 logits, _ = model.forward_logits_scheduled(inputs, teacher_prob)
                 loss = loss_fn(
@@ -172,4 +175,5 @@ class GenModelTrainer:
                 opt.zero_grad()
                 loss.backward()
                 opt.step()
+                scheduler.step()
                 t.set_postfix(loss=f"{loss.item():.4f}")

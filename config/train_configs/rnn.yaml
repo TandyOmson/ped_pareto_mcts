@@ -1,4 +1,11 @@
 model_class_path: ped_pareto_mcts.gen_models.rnn.LSTMNextTokenLM
-embed_dim: 64
-max_len: 100
-hidden_dim: 128
+model_config:
+  embed_dim: 64
+  max_len: 100
+  hidden_dim: 128
+train_config:
+  training_method: scheduled_sampling
+  teacher_decay: 0.95 #valid if scheduled_sampling
+  lr: 0.001
+  lr_decay: 0.99
+  

@@ -17,34 +17,30 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     with open(args.model_config, "r") as f:
-        model_config = yaml.safe_load(f)
+        config = yaml.safe_load(f)
 
-    if args.model_config:
-        with open(args.model_config, "r") as f:
-            model_config = yaml.safe_load(f)
-            # training method and its config (if I add options other than .fit)
-            method = model_config.pop("method")
+    model_config = config["model_config"]
+    if "train_config" not in config.keys():
+        train_config = {"training_method": "teacher_forcing"}
     else:
-        method = None
+        train_config = config["train_config"]
 
     smis = [i.strip() for i in open(Path(args.smiles)).readlines()]
     all_tokens, sequences = tokenize_smiles(smis, use_selfies=True)
     print(all_tokens)
 
-    model_class_path = Path(model_config.pop("model_class_path"))
-    modelClass = load_class(model_class_path)
+    modelClass = load_class(Path(config["model_class_path"]))
     model = modelClass(all_tokens, **model_config)
 
-    if method is not None:
-        if method == "teacher_forcing":
-            GenModelTrainer.fit(model, sequences, epochs=250)
-        if method == "scheduled_sampling":
-            GenModelTrainer.fit_scheduled_sampling(model, sequences, epochs=250)
-        else:
-            raise ValueError(f"Unknown training method: {method}")
+    if train_config.get("training_method") is not None:
+        if train_config["training_method"] == "teacher_forcing":
+            GenModelTrainer.fit(model, sequences, epochs=250, train_config=train_config)
+        if train_config["training_method"] == "scheduled_sampling":
+            GenModelTrainer.fit_scheduled_sampling(model, sequences, epochs=250, train_config=train_config)
+            raise ValueError(f"Unknown training method: {train_config['training_method']}")
     else:
         GenModelTrainer.fit(model, sequences, epochs=250)
 
     print("vocab_size:", len(model.vocab.itos))
-    save_model(model, Path(args.model_out), model_class_path, model_config=model_config)
+    save_model(model, Path(args.model_out), Path(config["model_class_path"]), model_config=model_config)
     save_tokens(model.vocab.itos, Path(args.vocab_out))

@@ -1,6 +1,10 @@
 model_class_path: ped_pareto_mcts.gen_models.transformer.TransformerNextTokenLM
-d_model: 128
-nhead: 4
-num_layers: 2
-dim_feedforward: 256
-max_len: 100
+model_config:
+  d_model: 128
+  nhead: 4
+  num_layers: 2
+  dim_feedforward: 256
+  max_len: 100
+train_config:
+  lr: 0.001
+  lr_decay: 0.99
