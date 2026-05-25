@@ -13,18 +13,17 @@ if __name__ == "__main__":
     parser.add_argument("--model_out")
     parser.add_argument("--vocab_out")
     parser.add_argument("--model_config")
-    parser.add_argument("--train_config", default=None)
 
     args = parser.parse_args()
 
     with open(args.model_config, "r") as f:
         model_config = yaml.safe_load(f)
 
-    if args.train_config:
-        with open(args.train_config, "r") as f:
-            train_config = yaml.safe_load(f)
+    if args.model_config:
+        with open(args.model_config, "r") as f:
+            model_config = yaml.safe_load(f)
             # training method and its config (if I add options other than .fit)
-            method = train_config.pop("method")
+            method = model_config.pop("method")
     else:
         method = None
 
