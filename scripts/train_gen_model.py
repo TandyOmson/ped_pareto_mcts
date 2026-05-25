@@ -37,8 +37,10 @@ if __name__ == "__main__":
     model = modelClass(all_tokens, **model_config)
 
     if method is not None:
-        if method == "fit":
+        if method == "teacher_forcing":
             GenModelTrainer.fit(model, sequences, epochs=250)
+        if method == "scheduled_sampling":
+            GenModelTrainer.fit_scheduled_sampling(model, sequences, epochs=250)
         else:
             raise ValueError(f"Unknown training method: {method}")
     else:
