@@ -53,7 +53,7 @@ def save_tokens(tokens, path):
         json.dump(tokens, f, ensure_ascii=False, indent=2)
 
 # logging tools
-def estimate_model_memory(model, input_size, batch_size=1, dtype_bytes=4, optimizer="adam"):
+def estimate_model_memory(model, input_size, vocab_size, batch_size=1, dtype_bytes=4, optimizer="adam"):
     # parameter memory
     params = sum(p.numel() for p in model.parameters())
     param_mem = params * dtype_bytes
@@ -82,9 +82,29 @@ def estimate_model_memory(model, input_size, batch_size=1, dtype_bytes=4, optimi
         hooks.append(m.register_forward_hook(hook_fn))
 
     model.eval()
-    x = torch.randn((batch_size, *input_size))
+
+    device = next(model.parameters()).device
+    x = torch.randint(0, vocab_size, (batch_size, *input_size), device=device)
+    
+    batch_size, seq_len = x.shape[:2]
+    
+    # random lengths (>=1)
+    lengths = torch.randint(1, seq_len + 1, (batch_size,), dtype=torch.long)
+    
+    # build padded input
+    x = torch.randint(0, vocab_size, (batch_size, seq_len), device=device)
+    
+    for i, l in enumerate(lengths):
+        if l < seq_len:
+            x[i, l:] = 0   # pad with 0
+    
+    lengths = lengths.cpu()
+
     with torch.no_grad():
-        model(x)
+        try:
+            model(x)
+        except:
+            model.forward_logits(x)
 
     for h in hooks:
         h.remove()
