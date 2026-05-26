@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.utils.data import Dataset, DataLoader
+from torch.nn.utils.rnn import pad_sequence
 import logging
 
 from tqdm import trange
@@ -26,6 +28,35 @@ class Vocab:
 
     def decode(self, ids):
         return [self.itos[i] for i in ids]
+    
+class seqDataset(Dataset):
+    def __init__(self, encoded, pad):
+        self.encoded = encoded
+        self.pad = pad
+
+    def __len__(self):
+        return len(self.encoded)
+    
+    def __getitem__(self, idx):
+        seq = self.encoded[idx]
+
+        input_seq = seq[:-1]
+        target_seq = seq[1:]
+
+        return (
+            torch.tensor(input_seq, dtype=torch.long),
+            torch.tensor(target_seq, dtype=torch.long)
+        )
+    
+def collate_fn(batch, pad):
+    inputs, targets = zip(*batch)
+
+    lengths = torch.tensor([len(seq) for seq in inputs], dtype=torch.long)
+
+    inputs = pad_sequence(inputs, batch_first=True, padding_value=pad)
+    targets = pad_sequence(targets, batch_first=True, padding_value=pad)
+
+    return inputs, targets, lengths
 
 class GenModel(ABC, torch.nn.Module):
     """ ABC for autoregressive generative models
@@ -90,42 +121,47 @@ class GenModelTrainer:
 
         # encode
         encoded = [[bos] + vocab.encode(s) + [eos] for s in sequences]
-        max_len = model.max_len
-        max_len = max(len(s) for s in encoded)
-
-        # pad
-        x = torch.full((len(encoded), max_len), pad, dtype=torch.long)
-        for i, s in enumerate(encoded):
-            x[i, :len(s)] = torch.tensor(s)
-
-        # teacher forcing (i.e. training on all possible unfinished sequences)
-        inputs  = x[:, :-1]
-        targets = x[:, 1:]
-
-        device = next(model.parameters()).device
-        inputs, targets = inputs.to(device), targets.to(device)
+        
+        batch_size = train_config.get("batch_size", 128)
+        dataset = seqDataset(encoded, pad)
+        dataloader = DataLoader(
+            dataset,
+            batch_size=batch_size,
+            shuffle=True,
+            collate_fn=lambda batch: collate_fn(batch, pad)
+        )
 
         opt = torch.optim.Adam(model.parameters(), lr=train_config.get("lr", 1e-3))
         scheduler = torch.optim.lr_scheduler.ExponentialLR(opt, gamma=train_config.get("lr_decay", 0.00))
         loss_fn = nn.CrossEntropyLoss(ignore_index=pad)
 
+        device = next(model.parameters()).device
+
         model.train()
         with trange(epochs) as t:
             for ep in t:
                 t.set_description('Training RNN: epoch %d' % (ep + 1))
-                logits, _ = model.forward_logits(inputs)
-                loss = loss_fn(
-                    logits.reshape(-1, vocab.size),
-                    targets.reshape(-1),
-                )
 
-                opt.zero_grad()
-                loss.backward()
-                opt.step()
+                total_loss = 0.0
+                for batch_inputs, batch_targets, batch_lengths in dataloader:
+                    batch_inputs, batch_targets = batch_inputs.to(device), batch_targets.to(device)
+
+                    logits, _ = model.forward_logits(batch_inputs)
+                    loss = loss_fn(
+                        logits.reshape(-1, vocab.size),
+                        batch_targets.reshape(-1),
+                    )
+
+                    opt.zero_grad()
+                    loss.backward()
+                    opt.step()
+
+                    total_loss += loss.item() / len(dataloader)
+
                 scheduler.step()
-                t.set_postfix(loss=f"{loss.item():.4f}")
+                t.set_postfix(loss=f"{total_loss:.4f}")
                 if (ep + 1) % train_config.get("log_interval", 50) == 0:
-                    log.debug(f"Epoch {ep + 1}/{epochs}, Loss: {loss.item():.4f}")
+                    log.debug(f"Epoch {ep + 1}/{epochs}, Loss: {total_loss:.4f}")
 
     @staticmethod
     def fit_scheduled_sampling(
@@ -144,23 +180,21 @@ class GenModelTrainer:
 
         # encode
         encoded = [[bos] + vocab.encode(s) + [eos] for s in sequences]
-        max_len = model.max_len
-        max_len = max(len(s) for s in encoded)
 
-        # pad
-        x = torch.full((len(encoded), max_len), pad, dtype=torch.long)
-        for i, s in enumerate(encoded):
-            x[i, :len(s)] = torch.tensor(s)
-
-        inputs  = x[:, :-1]
-        targets = x[:, 1:]
-
-        device = next(model.parameters()).device
-        inputs, targets = inputs.to(device), targets.to(device)
+        batch_size = train_config.get("batch_size", 128)
+        dataset = seqDataset(encoded, pad)
+        dataloader = DataLoader(
+            dataset,
+            batch_size=batch_size,
+            shuffle=True,
+            collate_fn=lambda batch: collate_fn(batch, pad)
+        )
 
         opt = torch.optim.Adam(model.parameters(), lr=train_config.get("lr", 1e-3))
         scheduler = torch.optim.lr_scheduler.ExponentialLR(opt, gamma=train_config.get("lr_decay", 0.00))
         loss_fn = nn.CrossEntropyLoss(ignore_index=pad)
+
+        device = next(model.parameters()).device
 
         model.train()
         with trange(epochs) as t:
@@ -169,17 +203,25 @@ class GenModelTrainer:
                 # Scheduled sampling: at timestep t, choose input as ground truth or model prediction increasing probabiliy of model prediction
                 teacher_decay_rate = train_config.get("teacher_decay", 0.95)
                 teacher_prob = max(0.1, teacher_decay_rate ** ep)
-                
-                logits, _ = model.forward_logits_scheduled(inputs, teacher_prob)
-                loss = loss_fn(
-                    logits.reshape(-1, vocab.size),
-                    targets.reshape(-1),
-                )
 
-                opt.zero_grad()
-                loss.backward()
-                opt.step()
+                total_loss = 0.0
+                for batch_inputs, batch_targets, batch_lengths in dataloader:
+                    batch_inputs, batch_targets = batch_inputs.to(device), batch_targets.to(device)
+
+                    logits, _ = model.forward_logits_scheduled(batch_inputs, teacher_prob)
+                    loss = loss_fn(
+                        logits.reshape(-1, vocab.size),
+                        batch_targets.reshape(-1),
+                    )
+
+                    opt.zero_grad()
+                    loss.backward()
+                    opt.step()
+
+                    total_loss += loss.item() / len(dataloader)
+
                 scheduler.step()
-                t.set_postfix(loss=f"{loss.item():.4f}")
+                t.set_postfix(loss=f"{total_loss:.4f}")
                 if (ep + 1) % train_config.get("log_interval", 50) == 0:
-                    log.debug(f"Epoch {ep + 1}/{epochs}, Loss: {loss.item():.4f}")
+                    log.debug(f"Epoch {ep + 1}/{epochs}, Loss: {total_loss:.4f}")
+                
