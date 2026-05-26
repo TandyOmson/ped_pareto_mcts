@@ -4,6 +4,7 @@ import yaml
 import logging
 import sys
 import pprint
+import torch
 
 from ped_pareto_mcts.gen_models.model_utils import tokenize_smiles, save_model, save_tokens, estimate_model_memory
 from ped_pareto_mcts.base.gen_model import GenModelTrainer
@@ -35,6 +36,12 @@ if __name__ == "__main__":
     parser.add_argument("--vocab_out")
     parser.add_argument("--model_config")
     parser.add_argument("--log_dir", default="train.log")
+    parser.add_argument(
+        "--device",
+        default="cuda" if torch.cuda.is_available() else "cpu",
+        choices=["cpu", "cuda"],
+        help="Device to run training on",
+    )
 
     args = parser.parse_args()
 
@@ -44,10 +51,10 @@ if __name__ == "__main__":
         config = yaml.safe_load(f)
 
     model_config = config["model_config"]
-    if "train_config" not in config.keys():
-        train_config = {"training_method": "teacher_forcing"}
-    else:
-        train_config = config["train_config"]
+    train_config = config.get("train_config", {"training_method": "teacher_forcing"})
+
+    device = torch.device(args.device if args.device == "cpu" or torch.cuda.is_available() else "cpu")
+    log.info(f"Using device: {device}")
 
     smis = [i.strip() for i in open(Path(args.smiles)).readlines()]
     all_tokens, sequences = tokenize_smiles(smis, use_selfies=True)
@@ -55,19 +62,18 @@ if __name__ == "__main__":
 
     modelClass = load_class(Path(config["model_class_path"]))
     model = modelClass(all_tokens, **model_config)
+    model.to(device)
 
     model_memory = estimate_model_memory(model, input_size=(1, model.max_len), batch_size=1, dtype_bytes=4, optimizer="adam")
     log.info(pprint.pformat(model_memory))
 
-    if train_config.get("training_method") is not None:
-        if train_config["training_method"] == "teacher_forcing":
-            GenModelTrainer.fit(model, sequences, epochs=250, train_config=train_config)
-        if train_config["training_method"] == "scheduled_sampling":
-            GenModelTrainer.fit_scheduled_sampling(model, sequences, epochs=250, train_config=train_config)
-        else:
-            raise ValueError(f"Unknown training method: {train_config['training_method']}")
-    else:
+    train_method = train_config.get("training_method", "teacher_forcing")
+    if train_method == "teacher_forcing":
         GenModelTrainer.fit(model, sequences, epochs=250, train_config=train_config)
+    elif train_method == "scheduled_sampling":
+        GenModelTrainer.fit_scheduled_sampling(model, sequences, epochs=250, train_config=train_config)
+    else:
+        raise ValueError(f"Unknown training method: {train_method}")
 
     print("vocab_size:", len(model.vocab.itos))
     save_model(model, Path(args.model_out), Path(config["model_class_path"]), model_config=model_config)

@@ -7,6 +7,7 @@ import sys
 import pprint
 from pathlib import Path
 import csv
+import torch
 
 from ped_pareto_mcts.utils.utils import load_model, load_tokens, load_class
 
@@ -25,15 +26,15 @@ class MCTS:
         self.total_gen_mols = 0
 
     def __call__(self):        
-        modelClass = load_class(Path(self.config["gen_model"]["class_path"]))
         vocab = load_tokens(Path(self.config["gen_model"]["vocab_file"]))
-        model = load_model(modelClass, Path(self.config["gen_model"]["model_file"]), vocab)
+        device = self.config.get("device", "cpu")
+        model = load_model(Path(self.config["gen_model"]["model_file"]), vocab, device=device)
         
         cyclerClass = load_class(Path(self.config["MCTS"]["class_path"]))
         cycler = cyclerClass(model, self.config)
 
         
-        with open(Path(config["outdir"]) / "log.csv", "w", newline="") as f:
+        with open(Path(self.config["outdir"]) / "log.csv", "w", newline="") as f:
             writer = None
             while self.total_gen_mols < self.config["MCTS"]["max_gen_mols"]:
                 step_log = cycler.step()
@@ -97,12 +98,21 @@ log = logging.getLogger(__name__)
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", required=True, help="path to config")
+    parser.add_argument(
+        "--device",
+        default="cuda" if torch.cuda.is_available() else "cpu",
+        choices=["cpu", "cuda"],
+        help="Device to run inference on",
+    )
     args = parser.parse_args()
 
     with open(args.config, "r") as fr:
         config = yaml.safe_load(fr)
 
+    config["device"] = args.device
+
     setup_logging(Path(config["outdir"]))
+    log.info(f"Using device: {config['device']}")
     
     log.info("STARTING MCTS:")
     final_pareto_front = MCTS(config)()
