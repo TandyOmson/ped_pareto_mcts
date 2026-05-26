@@ -51,3 +51,50 @@ def save_model(model, path, class_path, model_config=None):
 def save_tokens(tokens, path):
     with open(path, "w", encoding="utf-8") as f:
         json.dump(tokens, f, ensure_ascii=False, indent=2)
+
+# logging tools
+def estimate_model_memory(model, input_size, batch_size=1, dtype_bytes=4, optimizer="adam"):
+    # parameter memory
+    params = sum(p.numel() for p in model.parameters())
+    param_mem = params * dtype_bytes
+
+    # gradients
+    grad_mem = params * dtype_bytes
+
+    # optimizer
+    if optimizer.lower() == "adam":
+        opt_mem = params * dtype_bytes * 2
+    else:  # SGD etc.
+        opt_mem = 0
+
+    # rough activation estimate (very crude!)
+    activations_mem = 0
+    hooks = []
+
+    def hook_fn(module, inp, out):
+        nonlocal activations_mem
+        if isinstance(out, tuple):
+            out = out[0]
+        if hasattr(out, "numel"):
+            activations_mem += out.numel() * dtype_bytes
+
+    for m in model.modules():
+        hooks.append(m.register_forward_hook(hook_fn))
+
+    model.eval()
+    x = torch.randn((batch_size, *input_size))
+    with torch.no_grad():
+        model(x)
+
+    for h in hooks:
+        h.remove()
+
+    total = param_mem + grad_mem + opt_mem + activations_mem
+
+    return {
+        "params_MB": param_mem / 1024**2,
+        "grads_MB": grad_mem / 1024**2,
+        "optimizer_MB": opt_mem / 1024**2,
+        "activations_MB": activations_mem / 1024**2,
+        "total_MB": total / 1024**2,
+    }

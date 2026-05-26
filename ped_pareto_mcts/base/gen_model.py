@@ -2,8 +2,11 @@ from abc import ABC, abstractmethod
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import logging
 
 from tqdm import trange
+
+log = logging.getLogger()
 
 class Vocab:    
     """ Universal vocabulary class for tokenization and encoding/decoding
@@ -121,7 +124,8 @@ class GenModelTrainer:
                 opt.step()
                 scheduler.step()
                 t.set_postfix(loss=f"{loss.item():.4f}")
-
+                if (ep + 1) % train_config.get("log_interval", 50) == 0:
+                    log.debug(f"Epoch {ep + 1}/{epochs}, Loss: {loss.item():.4f}")
 
     @staticmethod
     def fit_scheduled_sampling(
@@ -177,3 +181,5 @@ class GenModelTrainer:
                 opt.step()
                 scheduler.step()
                 t.set_postfix(loss=f"{loss.item():.4f}")
+                if (ep + 1) % train_config.get("log_interval", 50) == 0:
+                    log.debug(f"Epoch {ep + 1}/{epochs}, Loss: {loss.item():.4f}")
