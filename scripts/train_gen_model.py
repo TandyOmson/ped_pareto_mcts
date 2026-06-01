@@ -16,6 +16,11 @@ def setup_logging(logfile):
     log = logging.getLogger()
     log.setLevel(logging.DEBUG)
 
+    formatter = logging.Formatter(
+        fmt="%(asctime)s | %(name)s | %(levelname)s | %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+
     # stdout (debug level)
     console = logging.StreamHandler(stream=sys.stdout)
     console.setLevel(logging.INFO)
@@ -80,3 +85,5 @@ if __name__ == "__main__":
 
     save_model(model, Path(args.model_out), Path(config["model_class_path"]), model_config=model_config)
     save_tokens(model.vocab.itos, Path(args.vocab_out))
+
+    log.info("Training finished")
