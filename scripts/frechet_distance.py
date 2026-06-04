@@ -107,6 +107,10 @@ if __name__ == "__main__":
             print("embedding failed for", count, smi)
 
     FD = calculator.evaluate(gen_embs, ref_embs)
-
+    score = np.exp(-0.2 * FD)
+    
     print(f"Frechet Distance: {FD}")
-    print(f"score: {np.exp(-0.2 * FD)}")
+    print(f"score: {score}")
+
+    with open("frechet.out", "w") as fw:
+        fw.write(f"FD:{FD}, score:{score}")
