@@ -18,9 +18,8 @@ class GenerativeExpansion(ExpansionPolicy):
         path.insert(0, '<bos>')
         
         prob_dict = self.model.get_all_prob_next_symbol(path)
-
         # filter out impossible or really unlikely nodes
-        prob_dict_filtered = prob_dict
+        prob_dict_filtered = {k: v for k, v in prob_dict.items() if k != '<pad>' and k != '<bos>' and k != '<unk>' and v > 1e-5}
 
         # initialize child nodes
         for token in prob_dict_filtered.keys():

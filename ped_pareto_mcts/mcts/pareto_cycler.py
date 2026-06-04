@@ -29,6 +29,7 @@ class ParetoMCTSCycler:
         self.tree = Tree(root_node)
         self.archive = ParetoArchive()
         self.use_selfies = config.get("use_selfies", False)
+        self.invalid_count = 0
 
         # Load policy classes and configs
         self.selection = ParetoPUCT(config["MCTS"]["exploration_const"], len(config["objective_functions"]), config["MCTS"]["maxlen"], gen_model)
@@ -52,19 +53,25 @@ class ParetoMCTSCycler:
         possible_child_nodes = self.expansion.expand(leaf)
         sequence = self.rollout.simulate(leaf)
 
+        mol_string = "".join(sequence[1:-1])
+        if self.use_selfies:
+            try:
+                mol_string = sf.decoder(mol_string)
+            except:
+                self.invalid_count += 1
+                return None
+            
         # validate generated sequence(s) (add configs to this)
         try:
-            smiles_to_mol("".join(sequence[1:-1]), allow_charges=False)
+            smiles_to_mol(mol_string, allow_charges=False)
         except:
+            self.invalid_count += 1
             return None
         
         objective_vector = {}
         extra_reward_info = {}
         for obj in self.objective_functions:
             obj.update_context(archive=self.archive)
-            mol_string = "".join(sequence[1:-1])
-            if self.use_selfies:
-                mol_string = sf.decoder(mol_string)
             if hasattr(obj, "extra_reward_info"):
                 extra_reward_info[obj.name] = obj.extra_reward_info()
             objective_vector[obj.name] = obj.evaluate(mol_string)
@@ -81,10 +88,11 @@ class ParetoMCTSCycler:
         #step_info["possible_child_nodes"] = possible_child_nodes
         step_info["root_to_leaf"] = root_to_leaf
         
-        step_info["molecule"] = "".join(sequence[1:-1])
+        step_info["molecule"] = mol_string
         step_info["reward"] = objective_vector
         step_info["reward_info"] = extra_reward_info
 
-        step_info["pareto_front"] = self.archive.front  
+        step_info["pareto_front"] = self.archive.front
+        step_info["invalid_count"] = self.invalid_count
         
         return step_info
