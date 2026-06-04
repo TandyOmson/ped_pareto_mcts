@@ -32,7 +32,7 @@ class FrechetDistance:
         ref_embs = np.vstack(ref_embs)
 
         gen_mu = np.mean(gen_embs, axis=0)
-        ref_mu = np.mean(ref_embs, axis=9)
+        ref_mu = np.mean(ref_embs, axis=0)
 
         gen_cov = np.cov(gen_embs.T)
         ref_cov = np.cov(ref_embs.T)
@@ -105,7 +105,7 @@ if __name__ == "__main__":
             ref_embs.append(emb)
         except:
             print("embedding failed for", count, smi)
-    
+
     FD = calculator.evaluate(gen_embs, ref_embs)
 
     print(f"Frechet Distance: {FD}")
