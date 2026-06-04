@@ -37,7 +37,7 @@ def embed_mol(mol):
         mol = rdkit_robust_embed(mol)
     except:
         try:
-            mol = openbabel_embed(smi)
+            mol = openbabel_embed(Chem.MolToSmiles(mol))
         except:
             mol = None
 

@@ -9,6 +9,8 @@ from ped_pareto_mcts.policies.global_pareto_archive import ParetoArchive, Pareto
 from ped_pareto_mcts.utils.utils import load_class
 from ped_pareto_mcts.utils.rdmol_utils import smiles_to_mol
 
+import selfies as sf
+
 # idea for later (change updated in ParetoArchive to updated and feedback, generating this payload)
 # from dataclasses import dataclass
 # @dataclass(frozen=True)
@@ -26,6 +28,7 @@ class ParetoMCTSCycler:
         root_node = Node(token='<bos>', parent=None)
         self.tree = Tree(root_node)
         self.archive = ParetoArchive()
+        self.use_selfies = config.get("use_selfies", False)
 
         # Load policy classes and configs
         self.selection = ParetoPUCT(config["MCTS"]["exploration_const"], len(config["objective_functions"]), config["MCTS"]["maxlen"], gen_model)
@@ -59,10 +62,13 @@ class ParetoMCTSCycler:
         extra_reward_info = {}
         for obj in self.objective_functions:
             obj.update_context(archive=self.archive)
+            mol_string = "".join(sequence[1:-1])
+            if self.use_selfies:
+                mol_string = sf.decoder(mol_string)
             if hasattr(obj, "extra_reward_info"):
                 extra_reward_info[obj.name] = obj.extra_reward_info()
-            objective_vector[obj.name] = obj.evaluate("".join(sequence[1:-1]))
-        newmol = Molecule(sequence="".join(sequence[1:-1]), reward=objective_vector)
+            objective_vector[obj.name] = obj.evaluate(mol_string)
+        newmol = Molecule(sequence=mol_string, reward=objective_vector)
         
         backprop_payload = ParetoBackprop(objective_vector, self.archive)
         self.tree.backpropagate(leaf, backprop_payload)
