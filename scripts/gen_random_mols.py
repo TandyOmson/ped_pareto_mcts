@@ -19,6 +19,7 @@ if __name__ == "__main__":
     parse.add_argument("--vocab_file", type=str, required=True)
     parse.add_argument("--num_mols", type=int, default=10)
     parse.add_argument("--max_len", type=int, default=30)
+    parse.add_argument("--outfile", type=str, required=True)
     parse.add_argument("--prefix", type=str, required=False)
     parse.add_argument("--outimages", type=str, required=False)
 
@@ -50,12 +51,13 @@ if __name__ == "__main__":
     new_seqs = []
     new_seq_lens = []
     new_smiles = []
-    for _ in range(args.num_mols):
+    for i in range(args.num_mols):
         new_seq = get_max_prob_sequence()
         new_seq_lens.append(len(new_seq)-2)
         new_seqs.append("".join(new_seq))
         new_smi = sf.decoder("".join(new_seq[1:-1]))
         new_smiles.append(new_smi)
+        print(f"generating {i} of {args.num_mols} new molecules", end="\r")
         try:
             mol = Chem.MolFromSmiles(new_smi)
             if mol is None:
@@ -68,8 +70,11 @@ if __name__ == "__main__":
     for i, j in zip(new_seqs, new_seq_lens):
         print(i, j)
     print("generated smiles")
-    for i in new_smiles:
-        print(i)
+    with open(args.outfile, "w") as fw:
+        for i in new_smiles:
+            print(i)
+            if i:
+                fw.write(f"{i}\n")
     # save sample of generated molecules
     if args.outimages is not None:
         img = Draw.MolsToGridImage(mol_images[:25], molsPerRow=5)
