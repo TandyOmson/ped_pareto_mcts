@@ -24,8 +24,7 @@ class UCB(SelectionPolicy):
         for childnode in node.children.values():
             ucb.append(self.calc_ucb(childnode))
 
-        max_ucb = max(ucb)
-        max_ucb_idxs = [i for i, u in enumerate(ucb) if u == max_ucb]
+        max_ucb_idxs = np.argwhere(ucb == np.max(ucb)).flatten()
         idx = random.choice(max_ucb_idxs)
 
         return list(node.children.values())[idx]
