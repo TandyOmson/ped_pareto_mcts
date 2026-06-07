@@ -29,7 +29,6 @@ class ParetoMCTSCycler:
         self.tree = Tree(root_node)
         self.archive = ParetoArchive()
         self.use_selfies = config.get("use_selfies", False)
-        self.invalid_count = 0
 
         # Load policy classes and configs
         self.selection = ParetoPUCT(config["MCTS"]["exploration_const"], len(config["objective_functions"]), config["MCTS"]["maxlen"], gen_model)
@@ -58,15 +57,13 @@ class ParetoMCTSCycler:
             try:
                 mol_string = sf.decoder(mol_string)
             except:
-                self.invalid_count += 1
-                return None
+                raise Exception("SELFIES decode failure")
             
         # validate generated sequence(s) (add configs to this)
         try:
             smiles_to_mol(mol_string, allow_charges=False)
         except:
-            self.invalid_count += 1
-            return None
+            raise Exception("3D model generation failure")
         
         objective_vector = {}
         extra_reward_info = {}
@@ -74,7 +71,10 @@ class ParetoMCTSCycler:
             obj.update_context(archive=self.archive)
             if hasattr(obj, "extra_reward_info"):
                 extra_reward_info[obj.name] = obj.extra_reward_info()
-            objective_vector[obj.name] = obj.evaluate(mol_string)
+            try:
+                objective_vector[obj.name] = obj.evaluate(mol_string)
+            except:
+                raise Exception("objective failure")
         newmol = Molecule(sequence=mol_string, reward=objective_vector)
         
         backprop_payload = ParetoBackprop(objective_vector, self.archive)
@@ -93,6 +93,5 @@ class ParetoMCTSCycler:
         step_info["reward_info"] = extra_reward_info
 
         step_info["pareto_front"] = self.archive.front
-        step_info["invalid_count"] = self.invalid_count
         
         return step_info

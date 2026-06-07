@@ -22,8 +22,10 @@ class MCTS:
     def __init__(self, config):
         self.config = config
 
-        # Stopping criteria
-        self.total_gen_mols = 0
+        # Stopping criteria (need to add time here as well)
+        self.step_num = 0
+        self.invalid_gen_mols = 0
+        self.consecutive_failures = 0
 
     def __call__(self):        
         vocab = load_tokens(Path(self.config["gen_model"]["vocab_file"]))
@@ -36,25 +38,33 @@ class MCTS:
         
         with open(Path(self.config["outdir"]) / "log.csv", "w", newline="") as f:
             writer = None
-            while self.total_gen_mols < self.config["MCTS"]["max_gen_mols"]:
-                step_log = cycler.step()
-                self.total_gen_mols += 1
-            
-                log.info(f"STEP {self.total_gen_mols}")
-                log.debug(pprint.pformat(step_log, compact=True))
+            while self.step_num < self.config["MCTS"]["max_gen_mols"]:
+                try:
+                    self.step_num += 1
+                    log.info(f"STEP {self.step_num}, INVALID {self.invalid_gen_mols}")
+                    step_log = cycler.step()
+                    self.consecutive_failures = 0
+                except:
+                    log.debug("Invalid molecule generation", exc_info=True)
+                    self.invalid_gen_mols += 1
+                    self.consecutive_failures += 1
+                    if self.consecutive_failures == 50:
+                        log.info("50 consecutive generation failures, quitting gracefully...")
+                        return cycler.archive.front
 
-                if step_log:
-                    step_dict = {"gen_num" : self.total_gen_mols} | {"smiles": step_log["molecule"]} | {i:k for i,k in step_log["reward"].items()}
-                    step_dict = {k: normalise_str(v) for k, v in step_dict.items()}
-                    
-                    if writer is None:
-                        writer = csv.DictWriter(
-                            f,
-                            fieldnames=step_dict.keys(),
-                        )
-                        writer.writeheader()
-                    
-                    writer.writerow(step_dict)
+                log.debug(pprint.pformat(step_log, compact=True))
+                
+                step_dict = {"gen_num" : self.step_num} | {"smiles": step_log["molecule"]} | {i:k for i,k in step_log["reward"].items()}
+                step_dict = {k: normalise_str(v) for k, v in step_dict.items()}
+                
+                if writer is None:
+                    writer = csv.DictWriter(
+                        f,
+                        fieldnames=step_dict.keys(),
+                    )
+                    writer.writeheader()
+                
+                writer.writerow(step_dict)                    
 
         # key result
         return cycler.archive.front
@@ -113,6 +123,9 @@ if __name__ == "__main__":
 
     setup_logging(Path(config["outdir"]))
     log.info(f"Using device: {config['device']}")
+
+    with open(Path(config["outdir"]) / "config.yaml", "w") as fw:
+        yaml.safe_dump(config, fw, sort_keys=False, default_flow_style=False)
     
     log.info("STARTING MCTS:")
     final_pareto_front = MCTS(config)()

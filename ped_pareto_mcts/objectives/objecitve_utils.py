@@ -39,6 +39,6 @@ def embed_mol(mol):
         try:
             mol = openbabel_embed(Chem.MolToSmiles(mol))
         except:
-            mol = None
+            raise Exception
 
     return mol

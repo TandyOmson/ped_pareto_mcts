@@ -21,6 +21,10 @@ class GenerativeExpansion(ExpansionPolicy):
         # filter out impossible or really unlikely nodes
         prob_dict_filtered = {k: v for k, v in prob_dict.items() if k != '<pad>' and k != '<bos>' and k != '<unk>' and v > 1e-5}
 
+        # check not initial node (prevents nothing being generated)
+        if node.parent is None and "<eos>" in prob_dict_filtered.keys():
+            prob_dict_filtered.pop("<eos>")
+
         # initialize child nodes
         for token in prob_dict_filtered.keys():
             self.tree.get_or_create_child(parent=node, token=token)
