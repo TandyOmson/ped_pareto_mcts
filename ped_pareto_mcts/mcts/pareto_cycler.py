@@ -3,6 +3,7 @@ import logging
 
 from ped_pareto_mcts.base.tree import Tree, Node
 from ped_pareto_mcts.policies.puct import ParetoPUCT
+from ped_pareto_mcts.policies.ucb import UCB
 from ped_pareto_mcts.policies.generative_expansion import GenerativeExpansion
 from ped_pareto_mcts.policies.generative_rollout import GenerativeRollout
 from ped_pareto_mcts.policies.global_pareto_archive import ParetoArchive, ParetoBackprop, Molecule
@@ -31,10 +32,14 @@ class ParetoMCTSCycler:
         self.use_selfies = config.get("use_selfies", False)
 
         # Load policy classes and configs
-        self.selection = ParetoPUCT(config["MCTS"]["exploration_const"], len(config["objective_functions"]), config["MCTS"]["maxlen"], gen_model)
+        if len(config["objective_functions"]) == 1:
+            self.selection = UCB(config["MCTS"]["exploration_const"])
+            log.info("Using UCB selection policy as 1 objective function specified")
+        else:
+            self.selection = ParetoPUCT(config["MCTS"]["exploration_const"], len(config["objective_functions"]), config["MCTS"]["maxlen"], gen_model)
         self.expansion = GenerativeExpansion(self.tree, gen_model)
         self.rollout = GenerativeRollout(config["MCTS"]["maxlen"], gen_model)
-        
+
         # Load reward function classes and config for evaluator
         objective_functions = []
         for objective in config["objective_functions"]:
