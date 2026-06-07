@@ -1,15 +1,15 @@
-outdir: logs/test
+outdir: logs/hydros_04_06_26
+use_selfies: True
 
 gen_model:
-  class_path: ped_pareto_mcts.gen_models.rnn.GRUNextTokenLM
-  model_file: data/zinc_10k/rnn_model.pt
-  vocab_file: data/zinc_10k/rnn_vocab.json
+  model_file: data/gen_models/hydros_minimal_transformer/hydros_minimal_transformer.pt
+  vocab_file: data/gen_models/hydros_minimal_transformer/hydros_minimal_transformer.json
 
 MCTS:
   class_path: ped_pareto_mcts.mcts.pareto_cycler.ParetoMCTSCycler
-  max_gen_mols: 10
+  max_gen_mols: 1000
   exploration_const: 1.5
-  maxlen: 35
+  maxlen: 50
   
 objective_functions:
   logP:
@@ -31,5 +31,5 @@ objective_functions:
   ped:
     class_path: ped_pareto_mcts.objectives.ped.PairwiseEmbeddingDistance
     kwargs:
-      encoder_file: data/zinc_10k/zinc_10k_pretrained_encoder.pt
-      smiles_to_graph_file: data/zinc_10k/zinc_10k_config.json
+      encoder_file: data/hydros_minimal/hydros_minimal_pretrained_encoder.pt
+      smiles_to_graph_file: data/hydros_minimal/hydros_minimal_config.json

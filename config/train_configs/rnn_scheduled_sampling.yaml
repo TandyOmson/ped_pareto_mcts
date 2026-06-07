@@ -5,7 +5,7 @@ model_config:
   hidden_dim: 256
 train_config:
   training_method: scheduled_sampling
-  teacher_decay: 0.95 #valid if scheduled_sampling
+  teacher_decay: 0.99 #valid if scheduled_sampling
   lr: 0.001
-  lr_decay: 0.99
+  lr_decay: 0.995
   

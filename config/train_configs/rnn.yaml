@@ -1,10 +1,10 @@
 model_class_path: ped_pareto_mcts.gen_models.rnn.LSTMNextTokenLM
 model_config:
   embed_dim: 128
-  max_len: 100
+  max_len: 512
   hidden_dim: 256
 train_config:
   training_method: teacher_forcing
   lr: 0.001
-  lr_decay: 0.99
+  lr_decay: 0.999
   

@@ -1,0 +1,18 @@
+outdir: logs/hydros_06_06_26
+use_selfies: True
+
+gen_model:
+  model_file: data/gen_models/hydros_minimal_transformer/hydros_minimal_transformer.pt
+  vocab_file: data/gen_models/hydros_minimal_transformer/hydros_minimal_transformer.json
+
+MCTS:
+  class_path: ped_pareto_mcts.mcts.pareto_cycler.ParetoMCTSCycler
+  max_gen_mols: 10000
+  exploration_const: 1.5
+  maxlen: 50
+  
+objective_functions:
+  VinaScore:
+    class_path: ped_pareto_mcts.objectives.smina_score.VinaScore
+    kwargs:
+      receptor_file: data/receptors/cb7.sdf
