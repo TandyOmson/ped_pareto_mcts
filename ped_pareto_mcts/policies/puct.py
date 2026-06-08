@@ -23,6 +23,9 @@ class ParetoPUCT(SelectionPolicy):
 
     def select(self, node):
         puct = []
+        if node.visit_count == 0:
+            return random.choice(list(node.children.values()))
+        
         for childnode in node.children.values():
             puct.append(self.calc_puct(childnode))
         

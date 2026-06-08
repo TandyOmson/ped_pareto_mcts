@@ -21,6 +21,9 @@ class UCB(SelectionPolicy):
 
     def select(self, node):
         ucb = []
+        if node.visit_count == 0:
+            return random.choice(list(node.children.values()))
+        
         for childnode in node.children.values():
             ucb.append(self.calc_ucb(childnode))
 
@@ -35,6 +38,7 @@ class UCB(SelectionPolicy):
         else:
             exploitation = list(node.stats.values())[0]/node.visit_count
         
-        not_visited_const = np.sqrt(2 * np.log(node.parent.visit_count) / (0.001 + node.visit_count))
+        eps = 1e-3
+        not_visited_const = np.sqrt(2 * np.log(node.parent.visit_count) / (eps + node.visit_count))
         
         return exploitation + (self.c_val * not_visited_const)
