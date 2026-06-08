@@ -5,7 +5,7 @@ from rdkit import Chem
 
 from ped_pareto_mcts.base.reward import ObjectiveFunc
 from ped_pareto_mcts.utils.rdmol_utils import smiles_to_mol
-from ped_pareto_mcts.objectives.objecitve_utils import embed_mol
+from ped_pareto_mcts.utils.conf_gen import embed_mol
 
 class VinaScore(ObjectiveFunc):
     def __init__(self, name, receptor_file):
