@@ -46,7 +46,7 @@ class ParetoPUCT(SelectionPolicy):
             current_node = current_node.parent
 
         # model probability multiplied by second term constant guides MCTS to initially prefer nodes with low vist count
-        not_visited_const = np.sqrt(current_node.visit_count) / (1 + node.visit_count) 
+        not_visited_const = np.sqrt(node.parent.visit_count) / (1 + node.visit_count)
         
         prob = self.model.get_all_prob_next_symbol(path)[node.token]
 
