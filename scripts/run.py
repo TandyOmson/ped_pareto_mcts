@@ -108,6 +108,7 @@ log = logging.getLogger(__name__)
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", required=True, help="path to config")
+    parser.add_argument("--outdir", required=True, help="output directory to create")
     parser.add_argument(
         "--device",
         default="cuda" if torch.cuda.is_available() else "cpu",
@@ -120,6 +121,7 @@ if __name__ == "__main__":
         config = yaml.safe_load(fr)
 
     config["device"] = args.device
+    config["outdir"] = args.outdir
 
     setup_logging(Path(config["outdir"]))
     log.info(f"Using device: {config['device']}")
