@@ -27,6 +27,10 @@ class ObjectiveFunc(ABC):
         """
         return "max"
     
+    @property
+    def failure_val(self) -> float:
+        return -1.0
+    
 class BackpropPayload(ABC):
     """ Determines how objective function results are converted into rewards
         and how rewards update node stats

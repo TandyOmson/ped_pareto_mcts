@@ -52,6 +52,12 @@ class ParetoMCTSCycler:
 
         self.objective_functions = objective_functions
 
+        # backprop payload for invalid molecule generation
+        objective_failure_vals = {}
+        for obj in objective_functions:
+            objective_failure_vals[obj.name] = obj.failure_val
+        self.invalid_payload = ParetoBackprop(objective_failure_vals, self.archive)
+
     def step(self):
         leaf, root_to_leaf = self.selection.traverse(self.tree.root)        
         possible_child_nodes = self.expansion.expand(leaf)
@@ -62,12 +68,14 @@ class ParetoMCTSCycler:
             try:
                 mol_string = sf.decoder(mol_string)
             except:
+                self.tree.backpropagate(leaf, self.invalid_payload)
                 raise Exception("SELFIES decode failure")
             
         # validate generated sequence(s) (add configs to this)
         try:
             smiles_to_mol(mol_string, allow_charges=False)
         except:
+            self.tree.backpropagate(leaf, self.invalid_payload)
             raise Exception("3D model generation failure")
         
         objective_vector = {}
@@ -79,6 +87,7 @@ class ParetoMCTSCycler:
             try:
                 objective_vector[obj.name] = obj.evaluate(mol_string)
             except:
+                self.tree.backpropagate(leaf, self.invalid_payload)
                 raise Exception("objective failure")
         newmol = Molecule(sequence=mol_string, reward=objective_vector)
         
