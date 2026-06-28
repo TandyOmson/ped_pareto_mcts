@@ -11,6 +11,14 @@ class ParetoPUCT(SelectionPolicy):
         self.maxlen = maxlen
         self.model = model
 
+        # SCALE INVARIANT EXPLORATION TERM
+        # Exploitation Q is scaled for objective (raw objective values are not scaled)
+        self.global_min = np.full(num_objectives, np.inf)
+        self.global_max = np.full(num_objectives, -np.inf)
+        # Keep running standard deviation of each objective for tanh scaling (reduces the effect of outliers massively changing min and max)
+        self.running_scale = np.full(num_objectives, 0.5)
+        self.alpha = 0.1
+
     def traverse(self, root_node):
         node = root_node
         root_to_leaf = [node.token]
@@ -39,7 +47,34 @@ class ParetoPUCT(SelectionPolicy):
         if node.visit_count == 0:
             exploitation = np.zeros(self.num_objectives)
         else:
-            exploitation = np.array([i for i in node.stats.values()])/node.visit_count
+            q_vec = np.array([i for i in node.stats.values()]) / node.visit_count
+
+            # MIN MAX SCALING
+            # # update bounds on Q, not raw stats
+            # self.global_min = np.minimum(self.global_min, q_vec)
+            # self.global_max = np.maximum(self.global_max, q_vec)
+
+            # # safe scaling
+            # valid = self.global_max > self.global_min
+            # scaling = np.where(valid, self.global_max - self.global_min, 1.0)
+
+            # exploitation = (q_vec - self.global_min) / scaling
+
+            # # only apply symmetric scaling for valid bounds
+            # if np.any(valid):
+            #     exploitation = 2 * exploitation - 1
+            # else:
+            #     exploitation = np.zeros_like(q_vec)
+
+            # TANH SCALING
+            if node.visit_count == 1:            
+                self.running_scale = np.maximum(
+                        (1 - self.alpha) * self.running_scale + self.alpha * np.abs(q_vec),
+                        np.abs(q_vec)
+                    )
+            # exploitation
+            scale = np.maximum(self.running_scale, 0.05) # minmum floor to scale
+            exploitation = np.tanh(q_vec / scale)
          
         # model probability (that this is the next token in sequence)
         path = []
