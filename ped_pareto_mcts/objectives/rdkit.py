@@ -26,6 +26,14 @@ class tpsaObjective(ObjectiveFunc):
     def evaluate(self, smi):
         m = smiles_to_mol(smi)
         return MoleculeDescriptors.MolecularDescriptorCalculator(["TPSA"]).CalcDescriptors(m)[0]
+
+class spsObjective(ObjectiveFunc):
+    def __init__(self, name):
+        super().__init__(name)
+
+    def evaluate(self, smi):
+        m = smiles_to_mol(smi)
+        return MoleculeDescriptors.MolecularDescriptorCalculator(["SPS"]).CalcDescriptors(m)[0]
     
 class molwtObjective(ObjectiveFunc):
     def __init__(self, name):
