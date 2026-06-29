@@ -59,9 +59,13 @@ class ParetoMCTSCycler:
         self.invalid_payload = ParetoBackprop(objective_failure_vals, self.archive)
 
     def step(self):
-        leaf, root_to_leaf = self.selection.traverse(self.tree.root)        
-        possible_child_nodes = self.expansion.expand(leaf)
-        sequence = self.rollout.simulate(leaf)
+        try:
+            leaf, root_to_leaf = self.selection.traverse(self.tree.root)        
+            possible_child_nodes = self.expansion.expand(leaf)
+            sequence = self.rollout.simulate(leaf)
+        except:
+            self.tree.backpropagate(leaf, self.invalid_payload)
+            raise Exception("Selection/Expansion Error")
 
         mol_string = "".join(sequence[1:-1])
         if self.use_selfies:
