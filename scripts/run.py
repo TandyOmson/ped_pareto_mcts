@@ -8,6 +8,7 @@ import pprint
 from pathlib import Path
 import csv
 import torch
+import json
 
 from ped_pareto_mcts.utils.utils import load_model, load_tokens, load_class
 
@@ -134,3 +135,10 @@ if __name__ == "__main__":
 
     log.info("FINAL RESULT:")
     log.info(pprint.pformat(final_pareto_front, compact=True))
+
+    # Dump final pareto front to json
+    with open(Path(config["outdir"]) / "final_pareto_front.json", "w") as fw:
+        seqs = [i.sequence for i in final_pareto_front]
+        rewards = [i.reward for i in final_pareto_front]
+        final_out = {i: j for i, j in zip(seqs, rewards)}
+        json.dump(final_out, fw)

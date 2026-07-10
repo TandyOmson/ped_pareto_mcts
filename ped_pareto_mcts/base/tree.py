@@ -30,7 +30,6 @@ class Tree:
     
     def backpropagate(self, node: Node, backprop_payload: BackpropPayload) -> None:
         """ Update the node and its ancestors visit count and archive stats (pareto dervied metrics)
-            ArchiveStats is defined in policies 
         """
         while node is not None:
             node.visit_count += 1            
