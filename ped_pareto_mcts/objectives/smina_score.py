@@ -30,7 +30,8 @@ class VinaScore(ObjectiveFunc):
                            "--size_y", "30",
                            "--size_z", "30",
                            "--seed", "1000", 
-                           "--exhaustiveness", "9", 
+                           "--exhaustiveness", "9",
+                           "--scoring", "vinardo", 
                            " >> ", smina_cmd_output, 
                            " 2>&1",
                            ]
@@ -51,5 +52,4 @@ class VinaScore(ObjectiveFunc):
             p = sp.Popen('rm -rf ' + rundir + "ligand.sdf", shell=True, stdout=sp.PIPE)
             p.communicate()
 
-        # all objectives are optimised
         return -affinity

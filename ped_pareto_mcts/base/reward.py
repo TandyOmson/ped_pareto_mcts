@@ -20,6 +20,17 @@ class ObjectiveFunc(ABC):
     @abstractmethod
     def evaluate(self, sample) -> float:
         raise NotImplementedError
+    
+    def scale_reward(self, reward: float) -> float:
+        """ Use to smooth reward
+        """
+        if self.hasattr(self, "reward_mean") and self.hasattr(self, "reward_std"):
+            reward = (reward - self.reward_mean) / self.reward_std
+
+            reward_norm  = 1 / (1 + abs(reward))
+            return reward_norm
+        else:
+            return reward
 
     @property
     def optimisation_direction(self) -> Literal["max", "min"]:

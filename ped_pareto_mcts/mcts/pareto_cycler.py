@@ -48,7 +48,12 @@ class ParetoMCTSCycler:
             objectiveClass = load_class(objective_config["class_path"])
             objective_args = objective_config["kwargs"]
             
-            objective_functions.append(objectiveClass(objective, **objective_args))
+            obj = objectiveClass(objective, **objective_args)
+            if "mean" in objective_config and "std" in objective_config:
+                obj.reward_mean = objective_config["mean"]
+                obj.reward_std = objective_config["std"]
+
+            objective_functions.append(obj)
 
         self.objective_functions = objective_functions
 
@@ -90,7 +95,8 @@ class ParetoMCTSCycler:
             if hasattr(obj, "extra_reward_info"):
                 extra_reward_info[obj.name] = obj.extra_reward_info()
             try:
-                objective_vector[obj.name] = obj.evaluate(mol_string)
+                reward = obj.evaluate(mol_string)
+                objective_vector[obj.name] = obj.scale_reward(reward)
             except:
                 self.tree.backpropagate(leaf, self.invalid_payload)
                 raise Exception("objective failure")
