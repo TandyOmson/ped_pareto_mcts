@@ -49,13 +49,18 @@ if __name__ == "__main__":
         objective_config = config["objective_functions"][objective]
         objectiveClass = load_class(objective_config["class_path"])
         objective_args = objective_config["kwargs"]
-        objective_functions.append(objectiveClass(objective, **objective_args))
+
+        obj = objectiveClass(objective, **objective_args)
+        if "mean" in objective_config and "std" in objective_config:
+            obj.reward_mean = objective_config["mean"]
+            obj.reward_std = objective_config["std"]
+        objective_functions.append(obj)
 
     all_objectives = {}
     for obj in objective_functions:
         print(f"evaluating objective: {obj.name}")
         objective_values = Parallel(
-            n_jobs=4,
+            n_jobs=11,
             backend="loky"
         )(
             delayed(safe_evaluate)(obj, smi, scale=args.scale)

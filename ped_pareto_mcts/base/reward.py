@@ -1,5 +1,6 @@
 from typing import Literal
 from abc import ABC, abstractmethod
+import numpy as np
 
 from typing import Dict, Hashable
 
@@ -24,11 +25,11 @@ class ObjectiveFunc(ABC):
     def scale_reward(self, reward: float) -> float:
         """ Use to smooth reward
         """
-        if self.hasattr(self, "reward_mean") and self.hasattr(self, "reward_std"):
+        if hasattr(self, "reward_mean") and hasattr(self, "reward_std"):
             reward = (reward - self.reward_mean) / self.reward_std
 
-            reward_norm  = 1 / (1 + abs(reward))
-            return reward_norm
+            reward  = np.tanh(reward)
+            return reward
         else:
             return reward
 
