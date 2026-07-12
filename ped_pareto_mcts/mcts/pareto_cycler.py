@@ -117,6 +117,6 @@ class ParetoMCTSCycler:
         step_info["reward"] = objective_vector
         step_info["reward_info"] = extra_reward_info
 
-        step_info["pareto_front"] = self.archive.front
+        #step_info["pareto_front"] = self.archive.front
         
         return step_info
