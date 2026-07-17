@@ -28,7 +28,7 @@ class ObjectiveFunc(ABC):
         if hasattr(self, "reward_mean") and hasattr(self, "reward_std"):
             reward = (reward - self.reward_mean) / self.reward_std
 
-            reward  = np.tanh(reward)
+            reward  = float(np.tanh(reward))
             return reward
         else:
             return reward
