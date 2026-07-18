@@ -31,7 +31,7 @@ class sslDiversityScore(ObjectiveFunc):
         self.gen_threshold = gen_threshold
         self.n_seen = 0
 
-        z = self.embedder.get_embeddings("C")
+        z = self.embedder.get_embeddings("C")[0]
         dim = len(z)
         self.ref_embs = np.zeros((ref_threshold, dim))
         self.gen_embs = np.zeros((gen_threshold, dim))
@@ -48,7 +48,7 @@ class sslDiversityScore(ObjectiveFunc):
         self.n_seen += 1
 
         with torch.no_grad():
-            z = self.embedder.get_embeddings(smi)
+            z = self.embedder.get_embeddings(smi)[0]
 
         # --- build reference set ---
         if self.n_seen < self.ref_threshold:
@@ -136,14 +136,14 @@ class sslDiversityScoreToRef(ObjectiveFunc):
         self.gen_threshold = gen_threshold
         self.n_seen = 0
 
-        z = self.embedder.get_embeddings("C")
+        z = self.embedder.get_embeddings("C")[0]
         dim = len(z)
         ref_smis = [i.strip() for i in open(Path(reference_smiles_file), "r").readlines()]
         self.ref_embs = []
         for smi in ref_smis:
             with torch.no_grad():
                 try:
-                    self.ref_embs.append(self.embedder.get_embeddings(smi))
+                    self.ref_embs.append(self.embedder.get_embeddings(smi)[0])
                 except:
                     continue
         self.ref_embs = np.array(self.ref_embs)    
@@ -161,7 +161,7 @@ class sslDiversityScoreToRef(ObjectiveFunc):
         self.n_seen += 1
 
         with torch.no_grad():
-            z = self.embedder.get_embeddings(smi)
+            z = self.embedder.get_embeddings(smi)[0]
 
         # --- build initial generated set ---
         if self.n_seen < self.gen_threshold:
