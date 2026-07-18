@@ -30,7 +30,7 @@ class PairwiseEmbeddingDistance(ObjectiveFunc):
                 return 0.0
             else:
                 z = self.embedder.get_embeddings(smi)
-                return float(np.mean(np.linalg.norm(z - z_i) for z_i in self._embed_ref.values()))
+                return float(np.mean([np.linalg.norm(z - z_i) for z_i in self._embed_ref.values()]))
 
 class SubsetEmbeddingDistance(ObjectiveFunc):
     """ Mean pairwise embedding distance to a predefined reference set of molecules
@@ -43,4 +43,4 @@ class SubsetEmbeddingDistance(ObjectiveFunc):
     def evaluate(self, smi):
         with torch.no_grad():
             z = self.embedder.get_embeddings(smi)
-            return float(np.mean(np.linalg.norm(z - z_i) for z_i in self._embed_ref))
+            return float(np.mean([np.linalg.norm(z - z_i) for z_i in self._embed_ref]))
