@@ -8,8 +8,11 @@ from ped_pareto_mcts.base.reward import ObjectiveFunc
 
 import torch
 import numpy as np
+from pathlib import Path
 
 class PairwiseEmbeddingDistance(ObjectiveFunc):
+    """ Mean pairwise embedding distance to the current pareto front
+    """
     def __init__(self, name, encoder_file, smiles_to_graph_file, map_location="cpu"):
         super().__init__(name)
         self.embedder = sslEmbeddings(encoder_file, smiles_to_graph_file, map_location="cpu")
@@ -28,3 +31,16 @@ class PairwiseEmbeddingDistance(ObjectiveFunc):
             else:
                 z = self.embedder.get_embeddings(smi)
                 return float(np.mean(np.linalg.norm(z - z_i) for z_i in self._embed_ref.values()))
+
+class SubsetEmbeddingDistance(ObjectiveFunc):
+    """ Mean pairwise embedding distance to a predefined reference set of molecules
+    """
+    def __init__(self, name, encoder_file, smiles_to_graph_file, reference_smiles_file, map_location="cpu"):
+        super().__init__(name)
+        self.embedder = sslEmbeddings(encoder_file, smiles_to_graph_file, map_location="cpu")
+        self._embed_ref = [self.embedder.get_embeddings(smi.strip()) for smi in open(Path(reference_smiles_file), "r").readlines()]
+
+    def evaluate(self, smi):
+        with torch.no_grad():
+            z = self.embedder.get_embeddings(smi)
+            return float(np.mean(np.linalg.norm(z - z_i) for z_i in self._embed_ref))
