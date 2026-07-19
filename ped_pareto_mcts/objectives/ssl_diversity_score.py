@@ -69,7 +69,6 @@ class sslDiversityScore(ObjectiveFunc):
         # --- normal operation ---
         else:
             score = self.delta_fd(z)
-            self.update_mus_covs(z)
             return score
         
     def init_mus_covs(self):
@@ -112,6 +111,10 @@ class sslDiversityScore(ObjectiveFunc):
 
         diff_new = mu_new - self.mu_r
         fd_new = diff_new @ diff_new + tr_cov_new + self.tr_cov_r
+
+        self.mu_g = mu_new
+        self.sumsq_g = sumsq_new
+        self.tr_cov_g = tr_cov_new
 
         return fd_new - self.base_fd
 
@@ -177,7 +180,6 @@ class sslDiversityScoreToRef(ObjectiveFunc):
         # --- normal operation ---
         else:
             score = self.delta_fd(z)
-            self.update_mus_covs(z)
             return score
         
     def init_mus_covs(self):
@@ -220,5 +222,9 @@ class sslDiversityScoreToRef(ObjectiveFunc):
 
         diff_new = mu_new - self.mu_r
         fd_new = diff_new @ diff_new + tr_cov_new + self.tr_cov_r
+
+        self.mu_g = mu_new
+        self.sumsq_g = sumsq_new
+        self.tr_cov_g = tr_cov_new
 
         return fd_new - self.base_fd
