@@ -115,8 +115,13 @@ class sslDiversityScore(ObjectiveFunc):
         self.mu_g = mu_new
         self.sumsq_g = sumsq_new
         self.tr_cov_g = tr_cov_new
+        self.n_g = n_new
 
-        return fd_new - self.base_fd
+        old_fd = self.base_fd
+        self.base_fd = fd_new
+
+        # FD(generated + new, reference) - FD(generated, reference)
+        return fd_new - old_fd
 
 class sslDiversityScoreToRef(ObjectiveFunc):
     def __init__(
@@ -226,5 +231,10 @@ class sslDiversityScoreToRef(ObjectiveFunc):
         self.mu_g = mu_new
         self.sumsq_g = sumsq_new
         self.tr_cov_g = tr_cov_new
+        self.n_g = n_new
 
-        return fd_new - self.base_fd
+        old_fd = self.base_fd
+        self.base_fd = fd_new
+
+        # FD(generated + new, reference) - FD(generated, reference)
+        return fd_new - old_fd
