@@ -10,6 +10,10 @@ import numpy as np
 from joblib import Parallel, delayed
 from tqdm import tqdm
 
+from rdkit import RDLogger
+RDLogger.DisableLog('rdApp.*') 
+
+
 def safe_embed(smi, embedder, emb_dim):
     try:
         with torch.no_grad():

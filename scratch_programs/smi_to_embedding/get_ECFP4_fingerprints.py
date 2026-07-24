@@ -7,6 +7,10 @@ import numpy as np
 from joblib import Parallel, delayed
 from tqdm import tqdm
 
+from rdkit import RDLogger
+RDLogger.DisableLog('rdApp.*') 
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--smis", type=str, required=True)

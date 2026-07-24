@@ -6,6 +6,8 @@ from tqdm import tqdm
 from rdkit import Chem
 from rdkit.Chem.Scaffolds import MurckoScaffold
 
+from rdkit import RDLogger
+RDLogger.DisableLog('rdApp.*') 
 
 def process_smiles(smi):
     """

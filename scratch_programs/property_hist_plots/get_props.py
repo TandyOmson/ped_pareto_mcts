@@ -8,7 +8,10 @@ from tqdm import tqdm
 
 from rdkit import Chem
 from rdkit.Chem import Descriptors
+from rdkit.Chem import MolSurf
 
+from rdkit import RDLogger
+RDLogger.DisableLog('rdApp.*') 
 
 def calc_descriptors(smi):
     try:
@@ -18,14 +21,14 @@ def calc_descriptors(smi):
             return {
                 "smiles": smi,
                 "logP": np.nan,
-                "TPSA": np.nan,
+                "ASA": np.nan,
                 "MolWt": np.nan,
             }
 
         return {
             "smiles": smi,
             "logP": Descriptors.MolLogP(mol),
-            "TPSA": Descriptors.TPSA(mol),
+            "ASA": MolSurf.LabuteASA(mol)
             "MolWt": Descriptors.MolWt(mol),
         }
 
@@ -33,7 +36,7 @@ def calc_descriptors(smi):
         return {
             "smiles": smi,
             "logP": np.nan,
-            "TPSA": np.nan,
+            "ASA": np.nan,
             "MolWt": np.nan,
         }
 

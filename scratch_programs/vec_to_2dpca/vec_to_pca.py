@@ -23,6 +23,7 @@ def main():
 
     print(f"Loading {args.infile}")
     X = np.load(args.infile)
+    X = np.array([i for i in X if not np.isnan(i).any()])
 
     if X.ndim != 2:
         raise ValueError(

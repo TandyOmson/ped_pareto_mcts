@@ -4,6 +4,9 @@ from rdkit.Chem import rdFingerprintGenerator
 import argparse
 import numpy as np
 
+from rdkit import RDLogger
+RDLogger.DisableLog('rdApp.*') 
+
 def get_ECFP4(smi, nbits=2048):
     mol = Chem.MolFromSmiles(Chem.CanonSmiles(smi))
     fpgen = rdFingerprintGenerator.GetMorganGenerator(radius=2, fpSize=nbits)

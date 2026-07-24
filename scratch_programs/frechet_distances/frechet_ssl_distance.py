@@ -11,6 +11,9 @@ from rdkit import Chem
 from joblib import Parallel, delayed
 from tqdm import tqdm
 
+from rdkit import RDLogger
+RDLogger.DisableLog('rdApp.*') 
+
 def safe_embed(smi, embedder, emb_dim):
     try:
         with torch.no_grad():
@@ -26,6 +29,7 @@ if __name__ == "__main__":
     parser.add_argument("--gen_embs", type=str, default=None)
     parser.add_argument("--ref_smis", type=str, required=True)
     parser.add_argument("--outfile", type=str, default=None)
+    parser.add_argument("--n_workers", type=int, default=4)
 
     args = parser.parse_args()
 

@@ -5,6 +5,10 @@ from rdkit import Chem
 from fcd import load_ref_model, get_predictions, canonical_smiles
 import numpy as np
 
+from rdkit import RDLogger
+RDLogger.DisableLog('rdApp.*') 
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--gen_smis", type=str, required=True)
