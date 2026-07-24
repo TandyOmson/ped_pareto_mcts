@@ -19,4 +19,6 @@ __pycache__/
 *.onnx
 *.pkl
 *.joblib
+*.csv
 TO-DO.org
+scratch_programs/data/*
