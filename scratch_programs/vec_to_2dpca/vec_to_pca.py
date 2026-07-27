@@ -1,6 +1,7 @@
 import argparse
 import numpy as np
 from sklearn.decomposition import PCA
+import pickle
 
 def main():
     parser = argparse.ArgumentParser(
@@ -17,6 +18,12 @@ def main():
         type=str,
         required=True,
         help="Output .npy file for PCA coordinates",
+    )
+    parser.add_argument(
+        "--pcafile",
+        type=str,
+        default=None,
+        help="Output .pkl file for fitted PCA",
     )
 
     args = parser.parse_args()
@@ -44,6 +51,9 @@ def main():
     np.save(args.outfile, X_pca)
     print(f"Saved to {args.outfile}")
 
+    if args.pcafile is not None:
+        with open(args.pcafile, "wb") as fw:
+            pickle.dump(pca, fw)
 
 if __name__ == "__main__":
     main()

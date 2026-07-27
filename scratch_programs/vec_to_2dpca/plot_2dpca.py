@@ -3,7 +3,7 @@
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
-
+import pickle
 
 def main():
     parser = argparse.ArgumentParser(
@@ -12,9 +12,23 @@ def main():
 
     parser.add_argument(
         "--infile",
-        required=True,
+        default=None,
         type=str,
         help="Input .npy file containing an (N, 2) array",
+    )
+
+    parser.add_argument(
+        "--pcafile",
+        default=None,
+        type=str,
+        help="Input .pkl file containing fitted PCA (optional)",
+    )
+
+    parser.add_argument(
+        "--embfile",
+        default=None,
+        type=str,
+        help="Input .npy file containing embeddings (optional)",
     )
 
     parser.add_argument(
@@ -42,19 +56,34 @@ def main():
 
     print(f"Loading {args.infile}")
 
-    X = np.load(args.infile)
+    if args.infile is not None:
+        X = np.load(args.infile)
 
-    if X.ndim != 2:
+        if X.ndim != 2:
+            raise ValueError(
+                f"Expected a 2D array, got shape {X.shape}"
+            )
+
+        if X.shape[1] != 2:
+            raise ValueError(
+                f"Expected shape (N, 2), got {X.shape}"
+            )
+
+        print(f"Loaded {len(X):,} points")
+    elif args.pcafile is not None:
+        with open(args.pcafile, "rb") as fr:
+            pca = pickle.load(fr)
+
+        if args.embfile is None:
+            raise ValueError(
+                "if using --pcafile, must specify --embfile"
+            )
+        X = np.load(args.embfile)
+        X = pca.transform(X)
+    else:
         raise ValueError(
-            f"Expected a 2D array, got shape {X.shape}"
+            "must specify either --infile or both --pcafile and --embfile"
         )
-
-    if X.shape[1] != 2:
-        raise ValueError(
-            f"Expected shape (N, 2), got {X.shape}"
-        )
-
-    print(f"Loaded {len(X):,} points")
 
     plt.figure(figsize=(8, 8))
 
