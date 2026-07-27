@@ -28,7 +28,7 @@ def calc_descriptors(smi):
         return {
             "smiles": smi,
             "logP": Descriptors.MolLogP(mol),
-            "ASA": MolSurf.LabuteASA(mol)
+            "ASA": MolSurf.LabuteASA(mol),
             "MolWt": Descriptors.MolWt(mol),
         }
 
