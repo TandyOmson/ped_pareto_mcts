@@ -79,6 +79,7 @@ def main():
                 "if using --pcafile, must specify --embfile"
             )
         X = np.load(args.embfile)
+        X = np.array([i for i in X if not np.isnan(i).any()])
         X = pca.transform(X)
     else:
         raise ValueError(
