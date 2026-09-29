@@ -13,14 +13,17 @@ Aggregated rewards are assigned only to C and L through R. These nodes also have
 Pareto:
 Multiple objective functions calculate a reward vector. A global pareto archive maintains the pareto front (non dominated complete molecules) is updated during rollout. During rollout, the simulated molecule is added to the pareto pool if nno dominated and may evict a dominated molecule. Reward is no longer a scalar, but a vector, affected by both the rollout and the Pareto pool. Cumulative reward reflects how likely a node's decendants are to contribute to or improve the global pareto front.
 
-INSTALLATION INSTRUCTIONS:
-# Create conda environment
+# Installation
+## Create conda environment
 conda create --name ped_pareto_mcts python==3.11
-# Install pytorch (replace cu128 with cpu for CPU only)
+## Install pytorch (replace cu128 with cpu for CPU only)
 pip install torch==2.11.0 torchvision==0.26.0 torchaudio==2.11.0 --index-url https://download.pytorch.org/whl/cu128
 # Install pyG and other dependencies (replace cu128 with cpu for CPU only)
 pip install torch-cluster -f https://data.pyg.org/whl/torch-2.11.0+cu128.html
 pip install torch-geometric
 pip install pyg_lib torch_scatter torch_sparse -f https://data.pyg.org/whl/torch-2.11.0+cu128.html
-# Install remaining required modules from environment
+## Install remaining required modules from environment
 conda env update --file environment.yaml --prune
+
+MCTS Pareto multiobjective optimisation is based on the following paper:
+Yang, Y. et al. Enabling target-aware molecule generation to follow multi objectives with Pareto MCTS. Communications Biology 7, 1074 (2024).
