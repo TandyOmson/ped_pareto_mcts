@@ -18,7 +18,7 @@ Multiple objective functions calculate a reward vector. A global pareto archive 
 conda create --name ped_pareto_mcts python==3.11
 ## Install pytorch (replace cu128 with cpu for CPU only)
 pip install torch==2.11.0 torchvision==0.26.0 torchaudio==2.11.0 --index-url https://download.pytorch.org/whl/cu128
-# Install pyG and other dependencies (replace cu128 with cpu for CPU only)
+## Install pyG and other dependencies (replace cu128 with cpu for CPU only)
 pip install torch-cluster -f https://data.pyg.org/whl/torch-2.11.0+cu128.html
 pip install torch-geometric
 pip install pyg_lib torch_scatter torch_sparse -f https://data.pyg.org/whl/torch-2.11.0+cu128.html
